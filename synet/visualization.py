@@ -25,3 +25,17 @@ def plot_community(A, block_list=None):
             color_map[reverse_nodes[node]] = colors[i_block]
     nx.draw(gr, labels=labels, node_color=color_map, with_labels=True)
     plt.show()
+
+
+def plot_entropy_game(*results, events):
+    assert len(results) > 0
+
+    res_min = 1e7
+    res_max = -1e7
+    for res in results:
+        plt.plot(res)
+        res_min = min(np.nanmin(res), res_min)
+        res_max = max(np.nanmax(res), res_max)
+
+    plt.vlines(events, res_min, res_max, color='red', linestyle="--")
+    plt.show()

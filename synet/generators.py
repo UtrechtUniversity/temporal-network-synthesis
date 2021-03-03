@@ -4,19 +4,18 @@ from scipy.sparse.csc import csc_matrix
 
 def create_temporal_network(n_base_community=2, part_per_community=20,
                             event_size=5,
-                            rate_intern=5, n_events=100):
+                            p_intern=0.8, n_events=100):
     n_part = n_base_community*part_per_community
     n_community = n_base_community + 1
 #     A = np.zeros((n_events+1, n_events+1))
     last_event = np.zeros(n_part, dtype=int)
     p_community = np.ones(n_community)/n_community
-    Z_comm = n_base_community*rate_intern + 1
     communities = []
 
     for i in range(n_base_community):
-        p_community[i] = rate_intern/Z_comm
+        p_community[i] = p_intern/n_base_community
         communities.append(np.arange(i*part_per_community, (i+1)*part_per_community))
-    p_community[-1] = 1/Z_comm
+    p_community[-1] = 1-p_intern
     communities.append(np.arange(n_part))
 
     # A[0, :] = 1

@@ -1,6 +1,6 @@
 import numpy as np
 
-from synet import add_value, sub_value
+from synet.propagators.utils import add_value, sub_value
 
 
 def entropy_game(A, start=0, end=None):
