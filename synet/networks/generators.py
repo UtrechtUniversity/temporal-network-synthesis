@@ -18,7 +18,6 @@ def create_temporal_network(n_base_community=2, part_per_community=20,
     p_community[-1] = 1-p_intern
     communities.append(np.arange(n_part))
 
-    # A[0, :] = 1
     event_participants = np.zeros((n_events+1, event_size), dtype=int)
     event_types = np.zeros(n_events+1, dtype=int)
     event_types[0] = n_base_community

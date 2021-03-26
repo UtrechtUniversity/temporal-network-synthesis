@@ -1,8 +1,46 @@
 import numpy as np
+from synet.process.base import BaseProcess
+
+
+class DelayProcess(BaseProcess):
+    def __init__(self, p_delay=0.03, tau_delay=1, max_tau_delay=3):
+        self.p_delay = p_delay
+        self.tau_delay = tau_delay
+        self.max_tau_delay = max_tau_delay
+
+    def run_simulation(self, participants, start, end, n_agents=-1):
+        results = simulate_delay(
+            participants, start, end, n_agents=n_agents, p_delay=self.p_delay,
+            tau_delay=self.tau_delay, max_tau_delay=self.max_tau_delay)
+        return results
+# 
+#     @classmethod
+#     def agent_jobs(cls, netgen, n_agents=[20, 30, 50, 80, 140], nx=5, *args,
+#                    **kwargs):
+#         sim_args = (participants, start, end)
+#         jobs = []
+#         x_name = x_axis[0]
+#         x_values = x_axis[1]
+#         z_name = z_axis[0]
+#         z_values = z_axis[1]
+#         for x_val in x_values:
+#             for z_val in z_values:
+#                 new_kwargs = {
+#                     x_name: x_val,
+#                     z_name: z_val,
+#                 }.update(kwargs)
+#                 new_job = {
+#                     "class": cls,
+#                     "args": args,
+#                     "kwargs": new_kwargs,
+#                     "sim_args": sim_args,
+#                 }
+#                 jobs.append(new_job)
+#         print(jobs)
 
 
 def simulate_delay(event_participants, start, end, n_agents=-1, p_delay=0.03,
-                   tau_delay=1, ):
+                   tau_delay=1, max_tau_delay=3):
     if n_agents == -1:
         n_agents = np.max(event_participants) + 1
 
@@ -18,7 +56,7 @@ def simulate_delay(event_participants, start, end, n_agents=-1, p_delay=0.03,
     delay_resolve_time = np.full(n_agents, -1, dtype=np.int32)
     agent_pointer = np.full(n_agents, -1, dtype=np.int32)
     tau = tau_delay*n_agents
-    max_delay = round(3*tau)
+    max_delay = round(max_tau_delay*n_agents)
 
     ring_buffer = np.zeros((max_delay+1, n_agents), dtype=np.int32)
     ring_pointer = np.zeros(max_delay+1, dtype=np.int32)
