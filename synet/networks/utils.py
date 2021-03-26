@@ -11,10 +11,12 @@ def merge_networks(*networks, n_events=0):
     participants = [networks[0].participants]
     event_sources = [networks[0].event_sources]
     event_times = [networks[0].event_times]
+    agent_rates = [networks[0].agent_rates]
     for net in networks[1:]:
         event_sources.append(net.event_sources+len(event_types))
         participants.append(net.participants+cur_n_agents)
         event_times.append(net.event_times)
+        agent_rates.append(net.agent_rates)
         for net_id, net_key in net.event_types.items():
             event_types[cur_n_net_id] = _find_key(event_types, net_key)
             cur_n_net_id += 1
@@ -23,11 +25,14 @@ def merge_networks(*networks, n_events=0):
     time_span = np.max([net.time_span for net in networks])
     event_size = np.max([net.event_size for net in networks])
 
+    agent_rates = np.concatenate(agent_rates)
+    agent_prob = agent_rates/np.sum(agent_rates)
     event_times.append(get_event_times(n_events, time_span))
     merge_participants = np.zeros((n_events, event_size))
     for i_event in range(n_events):
         merge_participants[i_event, :] = np.random.choice(
-            cur_n_agents, size=event_size, replace=False)
+            cur_n_agents, size=event_size, replace=False,
+            p=agent_prob)
     participants.append(merge_participants)
     event_types[cur_n_net_id] = _find_key(event_types, "merge")
     event_sources.append(np.full(n_events, cur_n_net_id, dtype=int))

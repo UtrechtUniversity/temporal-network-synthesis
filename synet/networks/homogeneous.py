@@ -13,6 +13,7 @@ class HomogeneousNetwork(BaseNetwork):
         self.time_span = time_span
         self.n_events = n_events
         self.event_size = event_size
+        self.agent_rates = np.ones(n_agents)
 
         participants = np.zeros((n_events, event_size), dtype=int)
         event_sources = np.zeros(n_events, dtype=int)
