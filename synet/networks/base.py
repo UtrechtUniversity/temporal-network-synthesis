@@ -16,12 +16,15 @@ class BaseNetwork():
         gr.add_edges_from(edges)
         reverse_nodes = {x: i for i, x in enumerate(gr.nodes)}
         labels = {i: str(i) for i in range(self.A.shape[0])}
+        labels[0] = "s"
+        labels[self.n_events+1] = "t"
 
-        color_map = np.zeros(self.n_events+1)
+        color_map = np.zeros(self.n_events+2)
         for i_event in np.arange(1, self.n_events+1):
             color_map[reverse_nodes[i_event]] = self.event_sources[i_event-1]+1
 
         color_map[reverse_nodes[0]] = 0
+        color_map[reverse_nodes[self.n_events+1]] = 0
         norm = max(0.01, np.max(color_map))
         color_map /= norm
         nx.draw(gr, cmap=plt.get_cmap("gist_rainbow"), labels=labels,
@@ -42,7 +45,7 @@ class BaseNetwork():
         return self._A
 
     def compute_adjacency(self):
-        A_rows = np.empty(self.event_size*(self.n_events+1), dtype=int)
+        A_rows = np.empty(2*self.n_agents + self.event_size*self.n_events, dtype=int)
         A_cols = np.empty_like(A_rows)
         A_data = np.ones_like(A_rows)
         n_data = 0
@@ -59,9 +62,17 @@ class BaseNetwork():
             A_data[n_data: n_data+n_links] = counts
             n_data += n_links
             last_event[cur_participants] = i_event
+
+        last_connections = last_event[last_event != 0]
+        previous_events, counts = np.unique(last_connections, return_counts=True)
+        n_links = len(previous_events)
+        A_rows[n_data: n_data+n_links] = previous_events
+        A_cols[n_data: n_data+n_links] = self.n_events+1
+        A_data[n_data: n_data+n_links] = counts
+        n_data += n_links
         A_rows.resize(n_data)
         A_cols.resize(n_data)
         A_data.resize(n_data)
         A_sparse = csc_matrix((A_data, (A_rows, A_cols)),
-                              shape=(self.n_events+1, self.n_events+1))
+                              shape=(self.n_events+2, self.n_events+2))
         return A_sparse

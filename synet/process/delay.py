@@ -8,9 +8,11 @@ class DelayProcess(BaseProcess):
         self.tau_delay = tau_delay
         self.max_tau_delay = max_tau_delay
 
-    def run_simulation(self, participants, start, end, n_agents=-1):
+    def simulate(self, net, start=1, end=None):
+        if end is None:
+            end = net.n_events
         results = simulate_delay(
-            participants, start, end, n_agents=n_agents, p_delay=self.p_delay,
+            net, start, end, p_delay=self.p_delay,
             tau_delay=self.tau_delay, max_tau_delay=self.max_tau_delay)
         return results
 # 
@@ -39,10 +41,10 @@ class DelayProcess(BaseProcess):
 #         print(jobs)
 
 
-def simulate_delay(event_participants, start, end, n_agents=-1, p_delay=0.03,
+def simulate_delay(net, start, end, p_delay=0.03,
                    tau_delay=1, max_tau_delay=3):
-    if n_agents == -1:
-        n_agents = np.max(event_participants) + 1
+    n_agents = net.n_agents
+    participants = net.participants
 
     n_zeros = n_agents//2
     n_ones = n_agents - n_zeros
@@ -126,7 +128,7 @@ def simulate_delay(event_participants, start, end, n_agents=-1, p_delay=0.03,
             delay_resolve_time[agent_id] = -1
         n_current_delayed -= ring_pointer[cur_t]
         ring_pointer[cur_t] = 0
-        agents = event_participants[dst_event]
+        agents = participants[dst_event]
         cur_resolves = delay_resolve_time[agents]
         delay_ids = np.where(cur_resolves != -1)[0]
         if len(delay_ids):

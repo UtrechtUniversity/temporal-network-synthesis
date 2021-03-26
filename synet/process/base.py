@@ -4,7 +4,7 @@ from multiprocessing import Queue, cpu_count, Process
 
 class BaseProcess(ABC):
     @abstractmethod
-    def run_simulation(self, participants, start, end, n_agents=-1):
+    def simulate(self, net, start=1, end=None):
         raise NotImplementedError
 
     @staticmethod

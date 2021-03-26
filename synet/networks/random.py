@@ -30,7 +30,7 @@ def random_network(n_events=100, n_agents=40):
     assert np.sum(n_agents_group) == n_agents
     for i in range(2):
         net_class = np.random.choice([HeterogeneousNetwork, HomogeneousNetwork])
-        net = net_class(n_agents=n_agents_group[i], n_events=n_events_group[i])
+        net = net_class(n_agents=n_agents_group[i], n_events=n_events_group[i], time_span=1)
         networks.append(net)
 
     return merge_networks(*networks, n_events=n_inter_events)

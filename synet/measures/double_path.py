@@ -1,9 +1,10 @@
 import numpy as np
 
 
-def double_path_entropy(A, start, end):
-    n_events = A.shape[0]
-    AT = A.T
+def double_path_entropy(net, start, end):
+    n_events = net.n_events
+    AT = net.A.T
+    A = net.A
 
     n_path = np.zeros(n_events)
     n_path[start] = 1
@@ -13,8 +14,6 @@ def double_path_entropy(A, start, end):
             src_event = A.indices[src_pointer]
             n_agent = A.data[src_pointer]
             n_path[dst_event] += n_agent*n_path[src_event]
-#             if src_event > start:
-#                 n_entry[dst_event] -= n_agent
 
     sum_n = 0
     sum_n_log_n = 0
