@@ -3,18 +3,6 @@ import numpy as np
 from numba import njit, jit
 import numba as nb
 
-# def disease_process(A, n_eq=None):
-#     n_events = A.shape[0]
-#     if n_eq is None:
-#         n_eq = n_events//10
-# 
-#     
-#     for start in range(n_eq, n_events-2*n_eq):
-#         
-#         for dst_event in range(start+1, end)
-#             pass
-#  
-
 
 @njit
 def simulate_disease(event_participants, start, end, n_agents=-1, disease_time=2, disease_dt=1, p_infected=0.2):

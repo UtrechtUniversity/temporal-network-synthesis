@@ -24,8 +24,8 @@ def add_results(results, counts, entropy, t_start, dt, window_t, window_dt):
             counts[t] += t_factor*dt_factor
 
 
-def entropy_windows(A, dt, entropy_game, window_t_frac=0.1, window_dt_frac=0.3):
-    n_events = A.shape[0]
+def entropy_windows(net, dt, entropy_game, window_t_frac=0.1, window_dt_frac=0.3):
+    n_events = net.n_events
     eq_start = n_events//10
     eq_end = 9*n_events//10
     max_dt = dt*2
@@ -37,19 +37,19 @@ def entropy_windows(A, dt, entropy_game, window_t_frac=0.1, window_dt_frac=0.3):
 
     for t_start in range(eq_start, eq_end-max_dt):
         t_end = t_start + max_dt
-        entropy = entropy_game(A, t_start, t_end)
+        entropy = entropy_game(net, t_start, t_end)
         add_results(results, counts, entropy, t_start, dt, window_t=window_t, window_dt=window_dt)
     return results/counts
 
 
-def entropy_dt(A, max_dt, entropy_game, window_t_frac=0.1, window_dt_frac=0.3):
-    n_events = A.shape[0]
+def entropy_dt(net, max_dt, entropy_game, window_t_frac=0.1, window_dt_frac=0.3):
+    n_events = net.n_events
     eq_start = n_events//10
     eq_end = 9*n_events//10
 
     entropy_avg = np.zeros(max_dt)
     for t_start in range(eq_start, eq_end-max_dt):
         t_end = t_start + max_dt
-        entropy = entropy_game(A, t_start, t_end)
+        entropy = entropy_game(net, t_start, t_end)
         entropy_avg += entropy
     return entropy_avg/(eq_end-eq_start-max_dt)
