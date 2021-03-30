@@ -8,14 +8,22 @@ class DelayProcess(BaseProcess):
         self.tau_delay = tau_delay
         self.max_tau_delay = max_tau_delay
 
-    def simulate(self, net, start=1, end=None):
+    def _simulate(self, net, start=1, end=None, seed=None):
+        np.random.seed(seed)
         if end is None:
             end = net.n_events
         results = simulate_delay(
             net, start, end, p_delay=self.p_delay,
             tau_delay=self.tau_delay, max_tau_delay=self.max_tau_delay)
         return results
-# 
+
+    def todict(self):
+        return {
+            "p_delay": self.p_delay,
+            "tau_delay": self.tau_delay,
+            "max_tau_delay": self.max_tau_delay,
+        }
+#
 #     @classmethod
 #     def agent_jobs(cls, netgen, n_agents=[20, 30, 50, 80, 140], nx=5, *args,
 #                    **kwargs):

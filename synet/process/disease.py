@@ -2,12 +2,37 @@ import numpy as np
 
 from numba import njit, jit
 import numba as nb
+from synet.process.base import BaseProcess
+
+
+class DiseaseProcess(BaseProcess):
+    def __init__(self, disease_time=2, disease_dt=1, p_infected=0.2):
+        self.disease_time = disease_time
+        self.disease_dt = disease_dt
+        self.p_infected = p_infected
+
+    def _simulate(self, net, start=0, end=None, seed=None):
+        np.random.seed(seed)
+        results = simulate_disease(
+            net.participants, net.n_agents, start, end,
+            disease_time=self.disease_time, disease_dt=self.disease_dt,
+            p_infected=self.p_infected)
+        return results
+
+    def todict(self):
+        return {
+            "disease_time": self.disease_time,
+            "disease_dt": self.disease_dt,
+            "p_infected": self.p_infected,
+        }
 
 
 @njit
-def simulate_disease(event_participants, start, end, n_agents=-1, disease_time=2, disease_dt=1, p_infected=0.2):
-    if n_agents == -1:
-        n_agents = np.max(event_participants)+1
+def simulate_disease(participants, n_agents, start, end,
+                     disease_time=2, disease_dt=1, p_infected=0.2):
+#     n_agents = net.n_agents
+#     participants = net.participants
+
     n_zeros = n_agents//2
     n_ones = n_agents - n_zeros
     cur_agents_state = np.zeros(n_agents, dtype=nb.int32)
@@ -30,10 +55,10 @@ def simulate_disease(event_participants, start, end, n_agents=-1, disease_time=2
     cur_infected = n_ones
     for dst_event in range(start, end):
         n_event_infected = 0
-        for agent_id in event_participants[dst_event]:
+        for agent_id in participants[dst_event]:
             n_event_infected += cur_agents_state[agent_id]
         cur_p_infection = 1-(1-p_infected)**n_event_infected
-        for agent_id in event_participants[dst_event]:
+        for agent_id in participants[dst_event]:
             if cur_agents_state[agent_id] != 1 and np.random.rand() < cur_p_infection:
                 cur_agents_state[agent_id] = 1
                 cure_time = cur_t + base_disease_steps + np.random.randint(dt_disease_steps)
