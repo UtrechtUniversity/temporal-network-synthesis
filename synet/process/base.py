@@ -88,12 +88,12 @@ class BaseProcess(ABC):
         start_range = net.n_events-dt
 
         all_seeds = np.random.randint(0, 12365243, size=n_sim)
-        res = np.zeros(dt, dtype=float)
+        res = np.zeros((n_sim, dt), dtype=float)
         if n_jobs == 1:
             for i_sim in range(n_sim):
                 start = int(i_sim*start_range/n_sim)
                 end = start + dt
-                res += self._simulate(net, start, end, all_seeds[i_sim])
+                res[i_sim][:] = self._simulate(net, start, end, all_seeds[i_sim])
         else:
             starts = [int(i_sim*start_range/n_sim) for i_sim in range(n_sim)]
             jobs = [
@@ -110,11 +110,11 @@ class BaseProcess(ABC):
                 for i_sim in range(n_sim)
             ]
             all_res = self.run_jobs(jobs, n_jobs=n_jobs)
-            for t in all_res:
-                res += t[1]
-        return res/n_sim
+            for i_sim, t in enumerate(all_res):
+                res[i_sim][:] = t[1]
+        return res
 
-    def _simulate(self, start=0, end=None, seed=None):
+    def _simulate(self, net, start=0, end=None, seed=None):
         raise NotImplementedError
 
     def todict(self):

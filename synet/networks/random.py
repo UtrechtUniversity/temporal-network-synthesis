@@ -29,8 +29,16 @@ def random_network(n_events=100, n_agents=40):
     assert np.sum(n_events_group) == n_intra_events
     assert np.sum(n_agents_group) == n_agents
     for i in range(2):
-        net_class = np.random.choice([HeterogeneousNetwork, HomogeneousNetwork])
-        net = net_class(n_agents=n_agents_group[i], n_events=n_events_group[i], time_span=1)
+        if np.random.rand() < 0.5:
+            net = HomogeneousNetwork(n_agents=n_agents_group[i],
+                                     n_events=n_events_group[i], time_span=1)
+        else:
+            heterogeniety = 0.2+0.8*np.random.rand()
+            net = HeterogeneousNetwork(
+                n_agents=n_agents_group[i], n_events=n_events_group[i],
+                time_span=1, heterogeniety=heterogeniety)
         networks.append(net)
 
-    return merge_networks(*networks, n_events=n_inter_events)
+    final_network = merge_networks(*networks, n_events=n_inter_events)
+    assert final_network.n_events == n_events
+    return final_network

@@ -2,7 +2,7 @@ from collections import defaultdict
 
 import numpy as np
 
-from synet.analysis import entropy_dt
+from synet.analysis import entropy_dt, fixed_entropy_dt
 
 
 def get_measure(measure_name=None):
@@ -24,7 +24,10 @@ def apply_measures(networks, measures=None, max_dt=100):
     all_measure_results = defaultdict(lambda: [])
     for net in networks:
         for name, measure_f in measures.items():
-            res = entropy_dt(net, max_dt=max_dt, entropy_game=measure_f)
+            if name in ["path", "mixing", "paint"]:
+                res = fixed_entropy_dt(net, max_dt=max_dt, entropy_game=measure_f)
+            else:
+                res = entropy_dt(net, max_dt=max_dt, entropy_game=measure_f)
             all_measure_results[name].append(res)
     return all_measure_results
 

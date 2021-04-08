@@ -53,3 +53,24 @@ def entropy_dt(net, max_dt, entropy_game, window_t_frac=0.1, window_dt_frac=0.3)
         entropy = entropy_game(net, t_start, t_end)
         entropy_avg += entropy
     return entropy_avg/(eq_end-eq_start-max_dt)
+
+
+def fixed_entropy_dt(net, max_dt, entropy_game):
+    n_events = net.n_events
+
+    last_events = np.zeros(net.n_agents, dtype=int)
+    entropy_avg = np.zeros(max_dt)
+    for t_start in range(n_events-max_dt):
+        t_end = t_start + max_dt
+        agents = net.participants[t_start]
+        entropy = entropy_game(net, t_start, t_end)
+        all_prev_dt = t_start - last_events[agents]
+        for prev_dt in all_prev_dt:
+            new_sum = np.cumsum(entropy)
+            if prev_dt < max_dt:
+#                 diff_sum = np.zeros()
+                new_sum[prev_dt-max_dt:] -= new_sum[:max_dt-prev_dt]
+#             print(new_sum.shape, entropy.shape)
+            entropy_avg += new_sum
+        last_events[agents] = t_start
+    return entropy_avg/(n_events-max_dt)

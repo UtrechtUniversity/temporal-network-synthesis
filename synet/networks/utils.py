@@ -49,6 +49,7 @@ def merge_networks(*networks, n_events=0):
     new_network.time_span = time_span
     new_network.n_events = n_events + np.sum([n.n_events for n in networks])
     new_network.event_size = event_size
+    new_network.agent_rates = agent_rates
     return new_network
 
 

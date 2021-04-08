@@ -5,7 +5,8 @@ from synet.networks.utils import get_event_times
 
 
 class HeterogeneousNetwork(BaseNetwork):
-    def __init__(self, n_agents=20, event_size=5, n_events=100, time_span=None):
+    def __init__(self, n_agents=20, event_size=5, n_events=100, time_span=None,
+                 heterogeniety=1.0):
         if time_span is None:
             time_span = n_events/n_agents
 
@@ -14,7 +15,10 @@ class HeterogeneousNetwork(BaseNetwork):
         self.n_events = n_events
         self.event_size = event_size
 
-        self.agent_rates = np.random.pareto(2, self.n_agents)
+        self.heterogeniety = heterogeniety
+
+        self.agent_rates = heterogeniety*np.random.pareto(2, self.n_agents)
+        self.agent_rates += (1-heterogeniety)
         self.agent_rates /= np.mean(self.agent_rates)
 
         agent_prob = self.agent_rates/np.sum(self.agent_rates)
@@ -33,4 +37,4 @@ class HeterogeneousNetwork(BaseNetwork):
     @property
     def name(self):
         return (f"hetero_a{self.n_agents}s{self.event_size}e{self.n_events}"
-                f"t{self.time_span}")
+                f"t{self.time_span}h{self.heterogeniety:.3f}")

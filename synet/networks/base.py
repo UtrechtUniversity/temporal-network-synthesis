@@ -40,11 +40,19 @@ class BaseNetwork():
 
     @property
     def A(self):
+        "Compute the adjacency matrix if necessary"
         if self._A is None:
             self._A = self.compute_adjacency()
         return self._A
 
     def compute_adjacency(self):
+        """Compute the adjacency matrix from the event graph.
+
+        Returns
+        -------
+        adjaceny matrix: csc_matrix
+            Upper triangular matrix.
+        """
         A_rows = np.empty(2*self.n_agents + self.event_size*self.n_events, dtype=int)
         A_cols = np.empty_like(A_rows)
         A_data = np.ones_like(A_rows)

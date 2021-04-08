@@ -50,4 +50,4 @@ def simulate_majority(net, start, end, n_color=3):
                 cur_col_counts[col[i_col]] -= counts[i_col]
             cur_col_counts[col[max_col]] += participants.shape[1]
         res_entropy[dst_event-start] = entropy(cur_col_counts, n_agents)
-    return res_entropy
+    return np.log(n_agents) - res_entropy
