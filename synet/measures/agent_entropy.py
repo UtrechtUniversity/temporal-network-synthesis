@@ -1,5 +1,11 @@
 import numpy as np
 from numba import njit
+from synet.measures.base import BaseMeasure
+
+
+class AgentEntropy(BaseMeasure):
+    def measure_entropy(self, net, start, end):
+        return agent_entropy(net, start, end)
 
 
 def agent_entropy(net, start=1, end=None, numba=True):

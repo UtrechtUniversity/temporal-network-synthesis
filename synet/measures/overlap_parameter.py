@@ -1,5 +1,11 @@
 import numpy as np
 from numba import njit
+from synet.measures.base import BaseMeasure
+
+
+class OverlapParameter(BaseMeasure):
+    def measure_entropy(self, net, start, end):
+        return overlap_parameter(net, start, end)
 
 
 def overlap_parameter(net, start=1, end=None, numba=True):

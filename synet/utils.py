@@ -5,16 +5,17 @@ import numpy as np
 from synet.analysis import entropy_dt, fixed_entropy_dt
 
 
-def get_measure(measure_name=None):
+def get_measure(measure_name, **kwargs):
     from synet.config import measures
     if isinstance(measure_name, (tuple, list, np.ndarray)):
-        return [measures[n] for n in measure_name]
-    return measures[measure_name]
+        return [measures[n](**kwargs) for n in measure_name]
+    return measures[measure_name](**kwargs)
 
 
-def apply_measures(networks, measures=None, max_dt=100):
+def apply_measures(networks, measures=None, max_dt=100, n_jobs=1):
     if measures is None:
-        from synet.config import measures
+        from synet.config import measures as measure_classes
+        measures = {key: value() for key, value in measure_classes.items()}
 
     if isinstance(measures, (tuple, list)):
         measures = {m: get_measure(m) for m in measures}
@@ -22,13 +23,9 @@ def apply_measures(networks, measures=None, max_dt=100):
         measures = {measures: get_measure(measures)}
 
     all_measure_results = defaultdict(lambda: [])
-    for net in networks:
-        for name, measure_f in measures.items():
-            if name in ["path", "mixing", "paint"]:
-                res = fixed_entropy_dt(net, max_dt=max_dt, entropy_game=measure_f)
-            else:
-                res = entropy_dt(net, max_dt=max_dt, entropy_game=measure_f)
-            all_measure_results[name].append(res)
+    for name, measure in measures.items():
+        all_measure_results[name] = measure.entropy_dt(
+            networks=networks, max_dt=max_dt, n_jobs=n_jobs)
     return all_measure_results
 
 

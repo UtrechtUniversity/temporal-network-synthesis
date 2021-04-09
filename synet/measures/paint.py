@@ -1,5 +1,11 @@
 from numba.core.decorators import njit
 import numpy as np
+from synet.measures.base import BasePaintEntropy
+
+
+class PaintEntropy(BasePaintEntropy):
+    def measure_entropy(self, net, start, end):
+        return paint_entropy(net, start, end)
 
 
 def paint_entropy(net, start=1, end=None, numba=True):

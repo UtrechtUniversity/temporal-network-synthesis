@@ -1,5 +1,11 @@
 from numba import njit
 import numpy as np
+from synet.measures.base import BasePaintEntropy
+
+
+class MixingEntropy(BasePaintEntropy):
+    def measure_entropy(self, net, start, end):
+        return mixing_entropy(net, start, end)
 
 
 def mixing_entropy(net, start=1, end=None, numba=True):

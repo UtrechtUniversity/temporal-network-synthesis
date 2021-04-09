@@ -2,6 +2,12 @@ import numpy as np
 from numba.core.decorators import njit
 
 from synet.measures.utils import add_value, sub_value
+from synet.measures.base import BasePaintEntropy
+
+
+class PathEntropy(BasePaintEntropy):
+    def measure_entropy(self, net, start, end):
+        return path_entropy(net, start, end)
 
 
 @njit

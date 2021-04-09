@@ -9,29 +9,29 @@ class BaseProcess(ABC):
 #     def simulate(self, net, start=1, end=None):
 #         raise NotImplementedError
     @staticmethod
-    def run_jobs(jobs, n_jobs=-1):
+    def run_jobs(net, jobs, n_jobs=-1):
         if n_jobs is None:
             n_jobs = 1
         elif n_jobs == -1:
             n_jobs = cpu_count()
 
         queue_size = len(jobs)
-        job_queue = Queue()
+        job_queue = Queue(maxsize=1000)
         result_queue = Queue()
-
-        for job in jobs:
-            job_queue.put(job)
 
         worker_procs = [
             Process(
                 target=_simulate_worker,
-                args=(job_queue, result_queue),
+                args=(job_queue, result_queue, pid, net),
                 daemon=True,
             )
-            for _ in range(n_jobs)
+            for pid in range(n_jobs)
         ]
         for proc in worker_procs:
             proc.start()
+
+        for job in jobs:
+            job_queue.put(job)
 
         results = []
         for _ in range(queue_size):
@@ -66,7 +66,7 @@ class BaseProcess(ABC):
                     "class": self.__class__,
                     "init_kwargs": self.todict(),
                     "sim_kwargs": {
-                        "net": net,
+#                         "net": net,
                         "start": start,
                         "end": end,
                         "seed": seed,
@@ -74,7 +74,7 @@ class BaseProcess(ABC):
                 }
                 for seed in all_seeds
             ]
-            all_res = self.run_jobs(jobs, n_jobs=n_jobs)
+            all_res = self.run_jobs(net, jobs, n_jobs=n_jobs)
             for t in all_res:
                 res += t[1]
         return res/n_sim
@@ -101,15 +101,16 @@ class BaseProcess(ABC):
                     "class": self.__class__,
                     "init_kwargs": self.todict(),
                     "sim_kwargs": {
-                        "net": net,
+#                         "net": net,
                         "start": starts[i_sim],
                         "end": starts[i_sim] + dt,
                         "seed": seed,
-                    }
+                    },
+                    "sim_id": i_sim,
                 }
                 for i_sim in range(n_sim)
             ]
-            all_res = self.run_jobs(jobs, n_jobs=n_jobs)
+            all_res = self.run_jobs(net, jobs, n_jobs=n_jobs)
             for i_sim, t in enumerate(all_res):
                 res[i_sim][:] = t[1]
         return res
@@ -121,7 +122,7 @@ class BaseProcess(ABC):
         return {}
 
 
-def _simulate_worker(job_queue, output_queue):
+def _simulate_worker(job_queue, output_queue, pid, net=None):
     while True:
         job = job_queue.get(block=True)
         if job is None:
@@ -131,5 +132,5 @@ def _simulate_worker(job_queue, output_queue):
         sim_kwargs = job["sim_kwargs"]
 
         process = cls(**init_kwargs)
-        results = process.simulate(**sim_kwargs)
+        results = process.simulate(net, **sim_kwargs)
         output_queue.put((job, results))
