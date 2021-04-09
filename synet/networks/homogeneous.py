@@ -6,13 +6,33 @@ from synet.networks.utils import get_event_times
 
 class HomogeneousNetwork(BaseNetwork):
     def __init__(self, n_agents=20, event_size=5, n_events=100, time_span=None):
+        """Homogeneous network
+
+        In the heterogeneous network, agent have different intrinsic rates.
+        The rates are distributed as (1-h) + h*pareto(2), and then normalized
+        to 1.
+
+        Arguments
+        ---------
+        n_agents: int
+            Number of agents in the network.
+        event_size: int
+            Size of each event.
+        n_events: int
+            Number of events in the network.
+        time_span: double
+            Time span of the network, relevant for merging.
+        heterogeniety: double
+            Value between 0 and 1 that governs how different the event rates
+            are for agents. Higher values indicate rates that are more diverse.
+        """
         if time_span is None:
             time_span = n_events/n_agents
 
         self.n_agents = n_agents
         self.time_span = time_span
-        self.n_events = n_events
-        self.event_size = event_size
+#         self.n_events = n_events
+#         self.event_size = event_size
         self.agent_rates = np.ones(n_agents)
 
         participants = np.zeros((n_events, event_size), dtype=int)

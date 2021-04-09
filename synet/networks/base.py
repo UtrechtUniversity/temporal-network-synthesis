@@ -7,9 +7,33 @@ from scipy.sparse.csc import csc_matrix
 
 
 class BaseNetwork():
+    """ Basis for networks classes.
+
+    It mainly contains some functionality for visualization and
+    the computation of adjacency matrices. The following data members are
+    assumed to be set:
+
+    --- necessary ---
+    n_agents (int): The number of agents in the network.
+    event_types (dict[int: str]): The name of each event type
+        (i.e. how it was generated).
+    event_sources (np.ndarray[int]): The event type id for each of the events.
+    participants (np.ndarray[float, float]): agent ids present at each event.
+
+    --- optional ---
+    agent_rates (np.ndarray[float]): The rate at which each agent participates
+        in events.
+    event_times (np.ndarray[float]): Time each event takes place.
+    time_span (np.ndarray[float]): Time over which events take place
+        (not equal to min/max of event_times necessarily).
+    """
     _A = None
 
     def plot(self):
+        """ Plot the network with the networkx library.
+
+        Works mainly for smaller networks.
+        """
         rows, cols = self.A.nonzero()
         edges = zip(rows.tolist(), cols.tolist())
         gr = nx.OrderedGraph()
@@ -37,6 +61,16 @@ class BaseNetwork():
 
         plt.imshow(laplacian_copy)
         plt.show()
+
+    @property
+    def event_size(self):
+        "Get the event size of the network."
+        return self.participants.shape[1]
+
+    @property
+    def n_events(self):
+        "Get the number of events in the network."
+        return self.participants.shape[0]
 
     @property
     def A(self):

@@ -5,6 +5,22 @@ import numpy as np
 
 
 def merge_networks(*networks, n_events=0):
+    """Merge two networks into one.
+
+    Optionally add more inter community links to the network.
+
+    Arguments
+    ---------
+    networks: BaseNetwork
+        The networks to be merged.
+    n_events: int
+        The number of events added as inter community events.
+
+    Returns
+    -------
+    network: BaseNetwork
+        The merged network.
+    """
     event_types = deepcopy(networks[0].event_types)
     cur_n_net_id = len(event_types)
     cur_n_agents = networks[0].n_agents
@@ -54,12 +70,22 @@ def merge_networks(*networks, n_events=0):
 
 
 def get_event_times(n_events, time_span):
+    """ Generate event times.
+
+    Uses exponentially distributed times between events.
+
+    Arguments
+    ---------
+    n_events: int
+        Number of events to assign times for.
+    """
     event_times = np.cumsum(np.random.exponential(size=n_events+1))
     event_times *= time_span/event_times[-1]
-    return event_times[1:]
+    return event_times[:-1]
 
 
 def _find_key(event_types, old_key):
+    """Helper function for finding new names"""
     base_key = old_key.split("-")[0]
     new_key = base_key
     i_try = 0
