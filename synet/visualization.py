@@ -42,7 +42,13 @@ def plot_entropy_game(*results, events):
     plt.show()
 
 
-def plot_process_results(process_results, log_x_scale=False):
+def plot_process_results(process_results, log_x_scale=False, title=""):
+    if isinstance(process_results, dict):
+        for name, proc in process_results.items():
+            plt.title(title + " " + name)
+            plot_process_results(proc, log_x_scale)
+        return
+
     for res in process_results:
         plt.plot(np.mean(res, axis=0))
 

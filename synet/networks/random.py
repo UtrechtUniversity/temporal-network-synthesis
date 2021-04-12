@@ -4,7 +4,7 @@ from synet.networks.homogeneous import HomogeneousNetwork
 from synet.networks.utils import merge_networks
 
 
-def random_network(n_events=100, n_agents=40):
+def random_network(n_events=100, n_agents=40, n_community=2, seed=None):
     """ Generate a random network.
 
     Generates random networks with a set number of events and agents.
@@ -24,7 +24,8 @@ def random_network(n_events=100, n_agents=40):
         Number of events in the final network.
     n_agents: int
         Number of agents in the final network.
-
+    seed: int
+        Seed the random number generator
     Returns
     -------
     network: BaseNetwork
@@ -34,28 +35,20 @@ def random_network(n_events=100, n_agents=40):
     n_intra_events = n_events-n_inter_events
 
     # Number of agents in communities 1 and 2.
-    n_agents_1 = round((0.15+0.7*np.random.rand())*n_agents)
-    n_agents_1 = max(10, n_agents_1)
-    n_agents_1 = min(n_agents-10, n_agents_1)
-    n_agents_2 = n_agents-n_agents_1
-    n_agents_group = [n_agents_1, n_agents_2]
+    min_agent = 10
+    assert n_agents >= n_community*min_agent
 
-    # Compute the number of events in each community.
-    min_events_1 = round(n_intra_events*0.5*n_agents_1/n_agents)
-    min_events_2 = round(n_intra_events*0.5*n_agents_2/n_agents)
-    max_events_1 = round(n_intra_events*2*n_agents_1/n_agents)
-    max_events_2 = round(n_intra_events*2*n_agents_2/n_agents)
-    min_events = max(min_events_1, n_intra_events-max_events_2)
-    max_events = min(max_events_1, n_intra_events-min_events_2)
-    n_events_1 = np.random.randint(min_events, max_events+1)
-    n_events_group = [n_events_1, n_intra_events-n_events_1]
+    n_agents_group = distribute_randomly(
+        n_agents-n_community*min_agent, n_community, max_rate=4) + min_agent
+    n_events_group = distribute_randomly(
+        n_intra_events, n_community, base_rates=n_agents_group, max_rate=2)
 
     assert np.sum(n_events_group) == n_intra_events
     assert np.sum(n_agents_group) == n_agents
 
     # Generate the individual networks.
     networks = []
-    for i in range(2):
+    for i in range(n_community):
         if np.random.rand() < 0.5:
             net = HomogeneousNetwork(n_agents=n_agents_group[i],
                                      n_events=n_events_group[i], time_span=1)
@@ -70,3 +63,21 @@ def random_network(n_events=100, n_agents=40):
     final_network = merge_networks(*networks, n_events=n_inter_events)
     assert final_network.n_events == n_events
     return final_network
+
+
+def distribute_randomly(n_items, n_community, base_rates=None, max_rate=3):
+    if base_rates is None:
+        base_rates = np.ones(n_community)
+
+    item_rates = (1+(max_rate-1)*np.random.rand(n_community))
+    item_rates /= np.sum(item_rates)
+    n_item_group_fp = item_rates*n_items
+    n_item_group = n_item_group_fp.astype(int)
+    n_item_rest = n_item_group_fp-n_item_group
+
+    n_left = round(np.sum(n_item_rest))
+    for _ in range(n_left):
+        i_group = np.random.choice(n_community, p=n_item_rest/np.sum(n_item_rest))
+        n_item_group[i_group] += 1
+        n_item_rest[i_group] = 0
+    return n_item_group

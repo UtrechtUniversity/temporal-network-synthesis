@@ -48,9 +48,9 @@ class HeterogeneousNetwork(BaseNetwork):
                 p=agent_prob)
 
         self.event_sources = event_sources
-        self.event_types = {0: self.name}
         self.event_times = get_event_times(n_events, time_span)
         self.participants = participants
+        self.event_types = {0: self.name}
 
     @property
     def name(self):

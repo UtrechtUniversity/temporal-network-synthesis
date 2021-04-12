@@ -26,12 +26,13 @@ def apply_measures(networks, measures=None, max_dt=100, n_jobs=1):
     for name, measure in measures.items():
         all_measure_results[name] = measure.entropy_dt(
             networks=networks, max_dt=max_dt, n_jobs=n_jobs)
-    return all_measure_results
+    return dict(all_measure_results)
 
 
 def apply_process(networks, process, dt=100, n_sim=16, n_jobs=1):
     all_process_results = []
-    for net in networks:
-        res = process.simulate_dt(net, dt=dt, n_sim=n_sim, n_jobs=n_jobs)
-        all_process_results.append(res)
-    return all_process_results
+#     for net in networks:
+#         res = process.simulate_dt(net, dt=dt, n_sim=n_sim, n_jobs=n_jobs)
+#         all_process_results.append(res)
+    return process.simulate_dt(networks, dt, n_sim=n_sim, n_jobs=n_jobs)
+#     return all_process_results

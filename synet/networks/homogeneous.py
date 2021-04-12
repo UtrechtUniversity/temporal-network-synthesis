@@ -36,9 +36,9 @@ class HomogeneousNetwork(BaseNetwork):
                 n_agents, size=event_size, replace=False)
 
         self.event_sources = event_sources
-        self.event_types = {0: self.name}
         self.event_times = get_event_times(n_events, time_span)
         self.participants = participants
+        self.event_types = {0: self.name}
 
     @property
     def name(self):
