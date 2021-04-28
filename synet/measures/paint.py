@@ -4,6 +4,8 @@ from synet.measures.base import BasePaintEntropy
 
 
 class PaintEntropy(BasePaintEntropy):
+    name = "paint"
+
     def measure_entropy(self, net, start, end):
         return paint_entropy(net, start, end)
 
@@ -13,7 +15,9 @@ def paint_entropy(net, start=1, end=None, numba=True):
     if end is None:
         end = net.n_events
 
-    entropy = np.full(end-start, -1, dtype=float)
+    # assert end != start
+
+    entropy = np.full(end-start+1, -1, dtype=float)
     n_exit = np.array(A.sum(axis=1)).flatten()
     visited = np.full(end-start, False, dtype=np.bool)
 
@@ -27,7 +31,8 @@ def paint_entropy(net, start=1, end=None, numba=True):
 def numba_paint_entropy(A_indptr, A_data, A_indices, entropy, visited, n_exit,
                         start, end):
     n_current_agents = n_exit[start]
-    entropy[0] = np.log(n_current_agents)
+    entropy[0] = 0
+    entropy[1] = np.log(n_current_agents)
     visited[0] = True
     for dst_event in range(start+1, end):
         for src_pointer in range(A_indptr[dst_event], A_indptr[dst_event+1]):
@@ -39,13 +44,16 @@ def numba_paint_entropy(A_indptr, A_data, A_indices, entropy, visited, n_exit,
                 visited[dst_event-start] = True
         if visited[dst_event-start]:
             n_current_agents += n_exit[dst_event]
-        entropy[dst_event-start] = np.log(n_current_agents)
+        entropy[dst_event-start+1] = np.log(n_current_agents)
     return entropy
 
 
 def python_paint_entropy(A, entropy, visited, n_exit, start, end):
     n_current_agents = n_exit[start]
-    entropy[0] = np.log(n_current_agents)
+    entropy[0] = 0
+    if start+1 == end:
+        return
+    entropy[1] = np.log(n_current_agents)
     visited[0] = True
     for dst_event in range(start+1, end):
         for src_pointer in range(A.indptr[dst_event], A.indptr[dst_event+1]):

@@ -60,12 +60,8 @@ def create_xcor_boot_matrix(boot_proc_results, measure_results):
             for i_boot in range(n_boot):
                 cor = spearmanr(proc_data[i_boot], meas_res[net_idx[i_boot]]).correlation
                 correlations.append(cor)
-            correlations = np.sort(correlations)
             idx = proc_names.index(proc_name), meas_names.index(meas_name)
             xcor_matrix[idx] = correlations
-#             upper_cor_matrix[idx] = correlations[upper]
-#             lower_cor_matrix[idx] = correlations[lower]
-#             median_cor_matrix[idx] = correlations[median]
     return xcor_matrix, cor_names
 
 

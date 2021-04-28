@@ -189,12 +189,29 @@ def plot_measure_v_process(measure_results, process_results):
 
 def plot_pvm_dt(process_results, measure_results):
     x_axis = [np.mean(r) for r in process_results]
+    plt.xlabel("dt")
+    plt.ylabel("correlation")
     for measure_name, res in measure_results.items():
         all_cor = []
-        for i in range(len(res[0])):
+        try:
+            n_dt = len(res[0])
+        except TypeError:
+            continue
+        for i in range(n_dt):
             y_vals = np.array([r[i] for r in res])
             cor = spearmanr(x_axis, y_vals).correlation
             all_cor.append(cor)
-        plt.plot(all_cor, label=f"{measure_name}")
+        plt.plot(all_cor, label=f"{measure_name} (max={np.nanmax(all_cor)})")
     plt.legend()
     plt.show()
+
+
+def plt_pvm_alpha(process_results, measure_results, dt):
+    n_measure = len(measure_results)
+    x_vals = np.array([np.mean(r) for r in process_results])
+    t_start = dt + 1
+    t_end = dt + 2
+    entropy_start = np.array([meas[t_start] for meas in measure_results])
+    entropy_end = np.array([meas[t_end] for meas in measure_results])
+    y_vals = np.log(entropy_start/entropy_end)/np.log(t_start/t_end)
+    return spearmanr(x_vals, y_vals).correlation

@@ -6,6 +6,8 @@ from synet.measures.base import BasePaintEntropy
 
 
 class PathEntropy(BasePaintEntropy):
+    name = "path"
+
     def measure_entropy(self, net, start, end):
         return path_entropy(net, start, end)
 
@@ -27,7 +29,7 @@ def path_entropy(net, start=1, end=None, numba=True):
         end = n_events
     log_n_path = np.full(n_events, -1, dtype=float)
     n_exit = np.array(np.sum(A, axis=1)).flatten()
-    entropy = np.full(end-start, -1, dtype=float)
+    entropy = np.full(end-start+1, -1, dtype=float)
     if numba:
         return numba_path_entropy(
             A.indptr, A.data, A.indices, entropy, log_n_path,
@@ -42,7 +44,8 @@ def numba_path_entropy(A_indptr, A_data, A_indices, entropy, log_n_path,
     log_sum_n = np.log(n_exit[start])
     log_n_path[start] = 0
 
-    entropy[0] = entropy_compute(log_sum_n_log_n, log_sum_n)
+    entropy[0] = 0
+    entropy[1] = entropy_compute(log_sum_n_log_n, log_sum_n)
     for dst_event in range(start+1, end):
         for src_pointer in range(A_indptr[dst_event], A_indptr[dst_event+1]):
             src_event = A_indices[src_pointer]
@@ -63,7 +66,7 @@ def numba_path_entropy(A_indptr, A_data, A_indices, entropy, log_n_path,
             if log_n_path[dst_event] >= np.log(2)-1e-6:
                 log_sum_n_log_n = add_value(log_sum_n_log_n, np.log(n_exit[dst_event])
                                             + log_n_path[dst_event] + np.log(log_n_path[dst_event]))
-        entropy[dst_event-start] = entropy_compute(log_sum_n_log_n, log_sum_n)
+        entropy[dst_event-start+1] = entropy_compute(log_sum_n_log_n, log_sum_n)
     return entropy
 
 
@@ -72,7 +75,8 @@ def python_path_entropy(A, entropy, log_n_path, n_exit, start, end):
     log_sum_n = np.log(n_exit[start])
     log_n_path[start] = 0
 
-    entropy[0] = entropy_compute(log_sum_n_log_n, log_sum_n)
+    entropy[0] = 0
+    entropy[1] = entropy_compute(log_sum_n_log_n, log_sum_n)
     for dst_event in range(start+1, end):
         for src_pointer in range(A.indptr[dst_event], A.indptr[dst_event+1]):
             src_event = A.indices[src_pointer]
@@ -93,6 +97,6 @@ def python_path_entropy(A, entropy, log_n_path, n_exit, start, end):
             if log_n_path[dst_event] >= np.log(2)-1e-6:
                 log_sum_n_log_n = add_value(log_sum_n_log_n, np.log(n_exit[dst_event])
                                             + log_n_path[dst_event] + np.log(log_n_path[dst_event]))
-        entropy[dst_event-start] = entropy_compute(log_sum_n_log_n, log_sum_n)
+        entropy[dst_event-start+1] = entropy_compute(log_sum_n_log_n, log_sum_n)
     return entropy
 

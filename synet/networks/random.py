@@ -4,7 +4,7 @@ from synet.networks.homogeneous import HomogeneousNetwork
 from synet.networks.utils import merge_networks
 
 
-def random_network(n_events=100, n_agents=40, n_community=2, seed=None):
+def random_network(n_events=100, n_agents=100, n_community=2, seed=None):
     """ Generate a random network.
 
     Generates random networks with a set number of events and agents.
@@ -81,3 +81,13 @@ def distribute_randomly(n_items, n_community, base_rates=None, max_rate=3):
         n_item_group[i_group] += 1
         n_item_rest[i_group] = 0
     return n_item_group
+
+
+def random_two_split_network(n_events, n_inter_events, n_agents):
+    n_intra_events = n_events-n_inter_events
+    net1 = HomogeneousNetwork(n_events=n_intra_events//2, n_agents=n_agents//2)
+    net2 = HomogeneousNetwork(n_events=n_intra_events-n_intra_events//2,
+                              n_agents=n_agents-n_agents//2)
+    net = merge_networks(net1, net2, n_events=n_inter_events)
+    return net
+

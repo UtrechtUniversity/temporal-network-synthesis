@@ -147,20 +147,34 @@ class BasePaintEntropy(BaseMeasure):
     def _entropy_dt(self, net, max_dt):
         n_events = net.n_events
 
-        last_events = np.zeros(net.n_agents, dtype=int)
-        entropy_avg = np.zeros(max_dt)
-        for t_start in range(n_events-max_dt):
-            t_end = t_start + max_dt
+        last_events = np.full(net.n_agents, -1, dtype=int)
+        entropy_avg = np.zeros(max_dt+1)
+        counts = np.zeros(max_dt+1, dtype=int)
+        for t_start in range(n_events):
+            t_end = min(t_start + max_dt, n_events)
             agents = net.participants[t_start]
-            entropy = self.measure_entropy(net, t_start, t_end)
+            cur_entropy = self.measure_entropy(net, t_start, t_end)
+            entropy = np.zeros(max_dt+1)
+            entropy[:len(cur_entropy)] = cur_entropy
             all_prev_dt = t_start - last_events[agents]
             for prev_dt in all_prev_dt:
                 new_sum = np.cumsum(entropy)
+                new_counts = np.zeros(len(entropy), dtype=int)
+                new_counts[:len(cur_entropy)] = 1
+                new_counts[0] = 0
+                new_counts = np.cumsum(new_counts)
                 if prev_dt < max_dt:
                     new_sum[prev_dt-max_dt:] -= new_sum[:max_dt-prev_dt]
+                    new_counts[prev_dt-max_dt:] -= new_counts[:max_dt-prev_dt]
                 entropy_avg += new_sum
+                counts += new_counts
             last_events[agents] = t_start
-        return entropy_avg/(n_events-max_dt)
+
+#         print(counts[1], n_events*5)
+#         assert counts[0] == n_events*5
+        assert counts[1] == n_events*5
+        norm = (n_events-np.arange(max_dt+1))
+        return entropy_avg/norm#, counts
 
 
 def _simulate_worker_dt(job_queue, output_queue, pid):

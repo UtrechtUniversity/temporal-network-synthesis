@@ -1,4 +1,4 @@
-from abc import ABC, abstractmethod
+from abc import ABC
 from multiprocessing import Queue, cpu_count, Process
 
 import numpy as np
