@@ -54,6 +54,7 @@ class BaseNetwork():
         plt.show()
 
     def plot_matrix(self):
+        "Plot the laplacian as a 2D image."
         laplacian_copy = self.A.todense()
         np.fill_diagonal(laplacian_copy, 0)
 
@@ -85,7 +86,8 @@ class BaseNetwork():
         adjaceny matrix: csc_matrix
             Upper triangular matrix.
         """
-        A_rows = np.empty(2*self.n_agents + self.event_size*self.n_events, dtype=int)
+        A_rows = np.empty(2*self.n_agents + self.event_size*self.n_events,
+                          dtype=int)
         A_cols = np.empty_like(A_rows)
         A_data = np.ones_like(A_rows)
         n_data = 0
@@ -104,7 +106,8 @@ class BaseNetwork():
             last_event[cur_participants] = i_event
 
         last_connections = last_event[last_event != 0]
-        previous_events, counts = np.unique(last_connections, return_counts=True)
+        previous_events, counts = np.unique(last_connections,
+                                            return_counts=True)
         n_links = len(previous_events)
         A_rows[n_data: n_data+n_links] = previous_events
         A_cols[n_data: n_data+n_links] = self.n_events+1

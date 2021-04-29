@@ -6,8 +6,30 @@ from synet.networks.base import BaseNetwork
 
 
 class BaseProcess(ABC):
+    """Base class for general processes living on a network.
+
+    In particular a simulation process that works with BaseNetwork.
+    """
     @staticmethod
-    def run_jobs(jobs, net=None, n_jobs=-1, n_sim=None):
+    def run_jobs(jobs, target, net, n_jobs=-1):
+        """Parallel running of measure jobs.
+
+        Arguments
+        ---------
+        jobs: dict
+            Jobs to be processed in parallel
+        target: function
+            Function that executes these jobs.
+        net: (iterable, synet.networks.BaseNetwork)
+            Either a single network or a list/array of them.
+        n_jobs: int
+            Number of processes to use, -1 defaults to the number of cores.
+
+        Returns
+        -------
+        results: list
+            Unordered results of the computation.
+        """
         if n_jobs is None:
             n_jobs = 1
         elif n_jobs == -1:
@@ -17,12 +39,7 @@ class BaseProcess(ABC):
         job_queue = Queue(maxsize=1000)
         result_queue = Queue()
 
-        if n_sim is None:
-            target = _simulate_worker
-            args = (job_queue, result_queue, net)
-        else:
-            target = _simulate_network_worker
-            args = (job_queue, result_queue, net)
+        args = (job_queue, result_queue, net)
 
         worker_procs = [
             Process(
@@ -51,6 +68,23 @@ class BaseProcess(ABC):
         return results
 
     def simulate(self, net, start=1, end=None, n_sim=1, n_jobs=1, seed=None):
+        """Simulate the process over a portion of the network(s).
+
+        Arguments
+        ---------
+        net: synet.networks.BaseNetwork
+            Network to simulate the process on over a specific interval.
+        start: int
+            Start of the interval.
+        end: int
+            End of the interval, if None -> n_events.
+        n_sim: int
+            Number of simulations over the same interval.
+        n_jobs: int
+            Number of processes to use.
+        seed: int
+            Use this seed to seed the simulations with.
+        """
         if end is None:
             end = net.n_events
 
@@ -64,9 +98,11 @@ class BaseProcess(ABC):
 
         res = np.zeros(end-start, dtype=float)
         if n_jobs == 1:
+            # Single process
             for i_sim in range(n_sim):
                 res += self._simulate(net, start, end, seed=all_seeds[i_sim])
         else:
+            # Multi process
             jobs = [
                 {
                     "class": self.__class__,
@@ -85,14 +121,33 @@ class BaseProcess(ABC):
         return res/n_sim
 
     def simulate_dt(self, network, dt, n_sim=1, n_jobs=1, seed=None):
-        if seed is not None:
-            np.random.seed(seed)
+        """Simulate the process over a fixed period of time.
+
+        Varies the starting point of the simulation while keeping the
+        time difference between starting and end point the same.
+
+        Arguments
+        ---------
+        network: (iterable, BaseNetwork)
+            Either a network or a list of networks to simulate on.
+        dt: int
+            Time difference between start of the simulation and end.
+        n_sim: int
+            Number of simulations to be done.
+        n_jobs: int
+            Number of worker processes to use.
+        seed: int
+            Seed to simulate with.
+        """
         if not isinstance(network, BaseNetwork):
             return self._simulate_dt_networks(network, dt, n_sim=n_sim,
-                                              n_jobs=n_jobs)
-        return self._simulate_dt(network, dt, n_sim=n_sim, n_jobs=n_jobs)
+                                              n_jobs=n_jobs, seed=seed)
+        return self._simulate_dt(network, dt, n_sim=n_sim, n_jobs=n_jobs,
+                                 seed=seed)
 
-    def _simulate_dt_networks(self, networks, dt, n_sim=1, n_jobs=1, seed=None):
+    def _simulate_dt_networks(self, networks, dt, n_sim=1, n_jobs=1,
+                              seed=None):
+        """Simulate multiple networks over a fixed period of time."""
         n_network = len(networks)
         np.random.seed(seed)
         all_seeds = np.random.randint(0, 129873984, size=n_sim)
@@ -115,10 +170,12 @@ class BaseProcess(ABC):
         return [r[1] for r in sorted_res]
 
     def _simulate_dt(self, net, dt, n_sim=1, n_jobs=1, seed=None):
+        "Simulate a single network over a fixed period of time."
         assert dt <= net.n_events
 
         start_range = net.n_events-dt
 
+        # Generate random seeds.
         np.random.seed(seed)
         all_seeds = np.random.randint(0, 12365243, size=n_sim)
         res = np.zeros((n_sim, dt), dtype=float)
@@ -126,7 +183,8 @@ class BaseProcess(ABC):
             for i_sim in range(n_sim):
                 start = int(i_sim*start_range/n_sim)
                 end = start + dt
-                res[i_sim][:] = self._simulate(net, start, end, all_seeds[i_sim])
+                res[i_sim][:] = self._simulate(net, start, end,
+                                               all_seeds[i_sim])
         else:
             starts = [int(i_sim*start_range/n_sim) for i_sim in range(n_sim)]
             jobs = [
@@ -148,13 +206,16 @@ class BaseProcess(ABC):
         return res
 
     def _simulate(self, net, start=0, end=None, seed=None):
+        "Functionality implemented by the process."
         raise NotImplementedError
 
     def todict(self):
+        "Return the parameters of the simulation."
         return {}
 
 
-def _simulate_worker(job_queue, output_queue, net=None):
+def _simulate_worker(job_queue, output_queue, net):
+    "Process simulation worker for a single network"
     while True:
         job = job_queue.get(block=True)
         if job is None:
@@ -169,6 +230,7 @@ def _simulate_worker(job_queue, output_queue, net=None):
 
 
 def _simulate_network_worker(job_queue, output_queue, networks):
+    "Process simulation worker for multiple networks."
     while True:
         job = job_queue.get(block=True)
         if job is None:
@@ -181,4 +243,3 @@ def _simulate_network_worker(job_queue, output_queue, networks):
         process = cls(**init_kwargs)
         results = process.simulate_dt(net, **sim_kwargs)
         output_queue.put((job, results))
-

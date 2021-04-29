@@ -33,7 +33,7 @@ def merge_networks(*networks, n_events=0):
         participants.append(net.participants+cur_n_agents)
         event_times.append(net.event_times)
         agent_rates.append(net.agent_rates)
-        for net_id, net_key in net.event_types.items():
+        for net_key in net.event_types.values():
             event_types[cur_n_net_id] = _find_key(event_types, net_key)
             cur_n_net_id += 1
         cur_n_agents += net.n_agents
@@ -58,13 +58,12 @@ def merge_networks(*networks, n_events=0):
     new_network.event_times = np.concatenate(event_times)
     time_order = np.argsort(new_network.event_times)
     new_network.event_times = new_network.event_times[time_order]
-    new_network.participants = np.concatenate(participants).astype(int)[time_order]
+    new_participants = np.concatenate(participants).astype(int)
+    new_network.participants = new_participants[time_order]
     new_network.event_sources = np.concatenate(event_sources)[time_order]
     new_network.event_types = event_types
     new_network.n_agents = cur_n_agents
     new_network.time_span = time_span
-#     new_network.n_events = n_events + np.sum([n.n_events for n in networks])
-#     new_network.event_size = event_size
     new_network.agent_rates = agent_rates
     return new_network
 

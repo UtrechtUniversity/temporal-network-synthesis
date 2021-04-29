@@ -4,6 +4,7 @@ from synet.measures.base import BasePaintEntropy
 
 
 class MixingEntropy(BasePaintEntropy):
+    """Mixing or paint-conserving entropy."""
     name = "mixing"
 
     def measure_entropy(self, net, start, end):
@@ -21,17 +22,18 @@ def mixing_entropy(net, start=1, end=None, numba=True):
     paint_fraction = np.zeros(end-start)
 
     if numba:
-        return numba_mixing_entropy(
+        return _numba_mixing_entropy(
             A.indptr, A.data, A.indices, entropy, paint_fraction,
             current_p_log_p, n_exit, start, end)
-    return python_mixing_entropy(A, entropy, paint_fraction, current_p_log_p,
-                                 n_exit, start, end)
+    return _python_mixing_entropy(A, entropy, paint_fraction, current_p_log_p,
+                                  n_exit, start, end)
 
 
 @njit
-def numba_mixing_entropy(
+def _numba_mixing_entropy(
         A_indptr, A_data, A_indices, entropy, paint_fraction, current_p_log_p,
         n_exit, start, end):
+    """Numba computation (much faster)."""
     paint_fraction[0] = 1
     entropy[0] = 0
     entropy[1] = current_p_log_p
@@ -54,8 +56,9 @@ def numba_mixing_entropy(
     return entropy
 
 
-def python_mixing_entropy(
+def _python_mixing_entropy(
         A, entropy, paint_fraction, current_p_log_p, n_exit, start, end):
+    "Python variant."
     paint_fraction[0] = 1
     entropy[0] = 0
     entropy[1] = current_p_log_p

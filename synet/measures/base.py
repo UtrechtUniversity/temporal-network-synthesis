@@ -8,6 +8,22 @@ from synet.networks.base import BaseNetwork
 class BaseMeasure(ABC):
     @staticmethod
     def run_jobs(jobs, target, n_jobs=-1):
+        """Parallel running of measure jobs.
+
+        Arguments
+        ---------
+        jobs: dict
+            Jobs to be processed in parallel
+        target: function
+            Function that executes these jobs.
+        n_jobs: int
+            Number of processes to use, -1 defaults to the number of cores.
+
+        Returns
+        -------
+        results: list
+            Unordered results of the computation.
+        """
         if n_jobs is None:
             n_jobs = 1
         elif n_jobs == -1:
@@ -43,14 +59,31 @@ class BaseMeasure(ABC):
         return results
 
     def entropy_t(self, networks, dt, n_jobs=1):
+        """ Measure the entropy/measure as a function of time
+
+        Arguments
+        ---------
+        networks: (list, BaseNetwork)
+            Network(s) to process.
+        dt: int
+            Number of timesteps to measure the entropy over.
+        n_jobs: int
+            Number of processes for computation.
+
+        Returns
+        -------
+        Results ordered by the input order of the network.
+        """
         if isinstance(networks, BaseNetwork):
             return self._entropy_t(networks, dt)
 
         res = []
         if n_jobs == 1:
+            # Single process
             for net in networks:
                 res.append(self._entropy_t(net, dt))
         else:
+            # Multiprocessing
             jobs = [
                 {
                     "class": self.__class__,
@@ -65,11 +98,27 @@ class BaseMeasure(ABC):
             ]
             all_res = self.run_jobs(jobs, target=_simulate_worker_t,
                                     n_jobs=n_jobs)
+            # Reorder jobs
             sim_ids = np.argsort([r[0]["net_id"] for r in all_res])
             res = [all_res[sim_id][1] for sim_id in sim_ids]
         return res
 
     def entropy_dt(self, networks, max_dt, n_jobs=1):
+        """Measure the entropy/measure as a function of dt
+
+        Arguments
+        ---------
+        networks: (list, BaseNetwork)
+            Network(s) to process.
+        max_dt: int
+            Maximum of dt to measure.
+        n_jobs: int
+            Number of processes for computation.
+
+        Returns
+        -------
+        Results ordered by the input order of the network.
+        """
         if isinstance(networks, BaseNetwork):
             return self._entropy_dt(networks, max_dt)
 
@@ -101,6 +150,7 @@ class BaseMeasure(ABC):
         return res
 
     def _entropy_t(self, net, dt):
+        """Internal method for computing the entropy vs time."""
         last_events = np.full(net.n_agents, -1, dtype=int)
         entropy_avg = np.zeros(net.n_events)
         entropy_counts = np.zeros(net.n_events, dtype=int)
@@ -124,6 +174,10 @@ class BaseMeasure(ABC):
         return entropy_avg
 
     def _entropy_dt(self, net, max_dt):
+        """Internal method for computing entropy vs dt.
+
+        This method is overwritten for the paint games.
+        """
         n_events = net.n_events
         eq_start = n_events//10
         eq_end = 9*n_events//10
@@ -137,6 +191,7 @@ class BaseMeasure(ABC):
 
     @abstractmethod
     def measure_entropy(self, net, start, end):
+        """Main method that needs to be implemented by sub classes."""
         raise NotImplementedError
 
     def todict(self):
@@ -144,6 +199,7 @@ class BaseMeasure(ABC):
 
 
 class BasePaintEntropy(BaseMeasure):
+    """Base class for paint game measures."""
     def _entropy_dt(self, net, max_dt):
         n_events = net.n_events
 
@@ -170,14 +226,22 @@ class BasePaintEntropy(BaseMeasure):
                 counts += new_counts
             last_events[agents] = t_start
 
-#         print(counts[1], n_events*5)
-#         assert counts[0] == n_events*5
-        assert counts[1] == n_events*5
         norm = (n_events-np.arange(max_dt+1))
-        return entropy_avg/norm#, counts
+        return entropy_avg/norm
 
 
 def _simulate_worker_dt(job_queue, output_queue, pid):
+    """Worker function to compute entropy_dt using jobs.
+
+    Arguments
+    ---------
+    job_queue: multiprocessing.Queue
+        Queue for jobs being used as input for computation.
+    output_queue: multiprocessing.Queue
+        Queue for results of computation.
+    pid: int
+        Process id of the worker (unused).
+    """
     while True:
         job = job_queue.get(block=True)
         if job is None:
@@ -192,6 +256,17 @@ def _simulate_worker_dt(job_queue, output_queue, pid):
 
 
 def _simulate_worker_t(job_queue, output_queue, pid):
+    """Worker function to compute entropy_t using jobs.
+
+    Arguments
+    ---------
+    job_queue: multiprocessing.Queue
+        Queue for jobs being used as input for computation.
+    output_queue: multiprocessing.Queue
+        Queue for results of computation.
+    pid: int
+        Process id of the worker (unused).
+    """
     while True:
         job = job_queue.get(block=True)
         if job is None:

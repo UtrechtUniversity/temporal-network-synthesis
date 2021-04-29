@@ -5,7 +5,8 @@ from synet.networks.utils import get_event_times
 
 
 class HomogeneousNetwork(BaseNetwork):
-    def __init__(self, n_agents=20, event_size=5, n_events=100, time_span=None):
+    def __init__(self, n_agents=20, event_size=5, n_events=100,
+                 time_span=None):
         """Homogeneous network
 
         In the homogeneous network, the intrinsic rates for each agent

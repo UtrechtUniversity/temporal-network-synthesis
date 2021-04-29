@@ -4,6 +4,7 @@ from numba.core.decorators import njit
 
 @njit
 def add_value(log_val1, log_val2):
+    """log_val1 + log_val2"""
     if log_val1 == -1:
         return log_val2
     if log_val2 == -1:

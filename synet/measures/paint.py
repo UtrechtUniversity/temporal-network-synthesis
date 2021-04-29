@@ -4,32 +4,32 @@ from synet.measures.base import BasePaintEntropy
 
 
 class PaintEntropy(BasePaintEntropy):
+    """Boolean version of the paint game."""
     name = "paint"
 
     def measure_entropy(self, net, start, end):
         return paint_entropy(net, start, end)
 
 
-def paint_entropy(net, start=1, end=None, numba=True):
+def paint_entropy(net, start=0, end=None, numba=True):
     A = net.A
     if end is None:
         end = net.n_events
-
-    # assert end != start
 
     entropy = np.full(end-start+1, -1, dtype=float)
     n_exit = np.array(A.sum(axis=1)).flatten()
     visited = np.full(end-start, False, dtype=np.bool)
 
     if numba:
-        return numba_paint_entropy(A.indptr, A.data, A.indices, entropy,
-                                   visited, n_exit, start, end)
-    return python_paint_entropy(A, entropy, visited, n_exit, start, end)
+        return _numba_paint_entropy(A.indptr, A.data, A.indices, entropy,
+                                    visited, n_exit, start, end)
+    return _python_paint_entropy(A, entropy, visited, n_exit, start, end)
 
 
 @njit
-def numba_paint_entropy(A_indptr, A_data, A_indices, entropy, visited, n_exit,
-                        start, end):
+def _numba_paint_entropy(A_indptr, A_data, A_indices, entropy, visited, n_exit,
+                         start, end):
+    "Numba version of boolean paint game (fast)."
     n_current_agents = n_exit[start]
     entropy[0] = 0
     entropy[1] = np.log(n_current_agents)
@@ -48,10 +48,11 @@ def numba_paint_entropy(A_indptr, A_data, A_indices, entropy, visited, n_exit,
     return entropy
 
 
-def python_paint_entropy(A, entropy, visited, n_exit, start, end):
+def _python_paint_entropy(A, entropy, visited, n_exit, start, end):
+    "Python version of boolean paint game (slow)."
     n_current_agents = n_exit[start]
     entropy[0] = 0
-    if start+1 == end:
+    if start == end:
         return
     entropy[1] = np.log(n_current_agents)
     visited[0] = True
