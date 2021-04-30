@@ -4,7 +4,7 @@ from synet.networks.homogeneous import HomogeneousNetwork
 from synet.networks.utils import merge_networks
 
 
-def random_network(n_events=100, n_agents=100, n_community=2):
+def random_network(n_events=100, n_agents=100, n_community=2, event_size=5):
     """ Generate a random network.
 
     Generates random networks with a set number of events and agents.
@@ -51,12 +51,14 @@ def random_network(n_events=100, n_agents=100, n_community=2):
     for i in range(n_community):
         if np.random.rand() < 0.5:
             net = HomogeneousNetwork(n_agents=n_agents_group[i],
-                                     n_events=n_events_group[i], time_span=1)
+                                     n_events=n_events_group[i], time_span=1,
+                                     event_size=event_size)
         else:
             heterogeniety = 0.2+0.8*np.random.rand()
             net = HeterogeneousNetwork(
                 n_agents=n_agents_group[i], n_events=n_events_group[i],
-                time_span=1, heterogeniety=heterogeniety)
+                time_span=1, heterogeniety=heterogeniety,
+                event_size=event_size)
         networks.append(net)
 
     # Merge the networks.
@@ -84,10 +86,12 @@ def distribute_randomly(n_items, n_community, base_rates=None, max_rate=3):
     return n_item_group
 
 
-def random_two_split_network(n_events, n_inter_events, n_agents):
+def random_two_split_network(n_events, n_inter_events, n_agents, event_size=5):
     n_intra_events = n_events-n_inter_events
-    net1 = HomogeneousNetwork(n_events=n_intra_events//2, n_agents=n_agents//2)
+    net1 = HomogeneousNetwork(n_events=n_intra_events//2, n_agents=n_agents//2,
+                              event_size=event_size, time_span=1)
     net2 = HomogeneousNetwork(n_events=n_intra_events-n_intra_events//2,
-                              n_agents=n_agents-n_agents//2)
+                              n_agents=n_agents-n_agents//2,
+                              event_size=event_size, time_span=1)
     net = merge_networks(net1, net2, n_events=n_inter_events)
     return net

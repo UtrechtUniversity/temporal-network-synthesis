@@ -105,17 +105,17 @@ class BaseNetwork():
             n_data += n_links
             last_event[cur_participants] = i_event
 
-        last_connections = last_event[last_event != 0]
-        previous_events, counts = np.unique(last_connections,
+#         last_connections = last_event[last_event != 0]
+        previous_events, counts = np.unique(last_event,
                                             return_counts=True)
         n_links = len(previous_events)
         A_rows[n_data: n_data+n_links] = previous_events
         A_cols[n_data: n_data+n_links] = self.n_events+1
         A_data[n_data: n_data+n_links] = counts
         n_data += n_links
-        A_rows.resize(n_data)
-        A_cols.resize(n_data)
-        A_data.resize(n_data)
+        A_rows = np.resize(A_rows, n_data)
+        A_cols = np.resize(A_cols, n_data)
+        A_data = np.resize(A_data, n_data)
         A_sparse = csc_matrix((A_data, (A_rows, A_cols)),
                               shape=(self.n_events+2, self.n_events+2))
         return A_sparse
