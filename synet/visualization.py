@@ -1,5 +1,5 @@
-import networkx as nx
 from matplotlib import pyplot as plt
+import networkx as nx
 import numpy as np
 from scipy.stats import spearmanr
 
@@ -78,11 +78,12 @@ def plot_correlation_network(process_results, measure_results, n_resample=30):
             network_select.append(cur_network_select)
             correlations = []
             for _ in range(n_resample):
-                select_idx = np.random.choice(n_network, size=cur_network_select, replace=True)
+                select_idx = np.random.choice(
+                    n_network, size=cur_network_select, replace=True)
                 if len(np.unique(select_idx)) == 1:
                     continue
-#                 print(np.sort(select_idx))
-                cor = spearmanr(avg_process_results[select_idx], m_result[select_idx]).correlation
+                cor = spearmanr(avg_process_results[select_idx],
+                                m_result[select_idx]).correlation
                 correlations.append(cor)
             all_correlations.append(np.mean(correlations))
         all_correlations = np.array(all_correlations)
@@ -102,7 +103,8 @@ def bootstrap_sim(process_results, n_bootstrap=100, n_resample=None):
     for i_net in range(n_network):
         n_sample = process_results[i_net].shape[0]
         for i_bootstrap in range(n_bootstrap):
-            sample_idx = np.random.choice(n_sample, size=n_resample, replace=True)
+            sample_idx = np.random.choice(n_sample, size=n_resample,
+                                          replace=True)
             new_results = process_results[i_net][sample_idx]
             new_results += 1e-7*(np.random.randn(*new_results.shape)-0.5)
             bootstrap_results[i_net, i_bootstrap] = np.mean(new_results)
@@ -120,7 +122,9 @@ def plot_bootstrap_sim(process_results, measure_results, n_bootstrap=100):
         y_max = []
         y_median = []
         for n_resample in all_n_resample:
-            bootstrap_results = bootstrap_sim(process_results, n_bootstrap=n_bootstrap, n_resample=n_resample)
+            bootstrap_results = bootstrap_sim(
+                process_results, n_bootstrap=n_bootstrap,
+                n_resample=n_resample)
             all_cor = np.zeros(n_bootstrap)
             for i_boot in range(n_bootstrap):
                 proc_res = bootstrap_results[:, i_boot]
@@ -130,36 +134,12 @@ def plot_bootstrap_sim(process_results, measure_results, n_bootstrap=100):
             y_median.append(sorted_cor[middle])
             y_max.append(sorted_cor[n_bootstrap-edge-1])
 
-        y_error = np.vstack((np.array(y_median)-np.array(y_min), np.array(y_max)-np.array(y_median)))
-        plt.errorbar(1/np.array(all_n_resample), y_median, yerr=y_error, label=measure_name)
+        y_error = np.vstack((np.array(y_median)-np.array(y_min),
+                             np.array(y_max)-np.array(y_median)))
+        plt.errorbar(1/np.array(all_n_resample), y_median, yerr=y_error,
+                     label=measure_name)
     plt.legend()
     plt.show()
-
-# def plot_bootstrap_sim(process_results, measure_results, n_bootstrap=100):
-#     n_sim = process_results[0].shape[0]
-#     all_n_resample = np.unique((n_sim*(3+np.arange(10))/12).astype(int))
-#     for measure_name, res in measure_results.items():
-#         meas_res = [np.mean(r) for r in res]
-#         y_min = []
-#         y_max = []
-#         y_median = []
-#         for n_resample in all_n_resample:
-#             bootstrap_results = bootstrap_sim(process_results, n_bootstrap=n_bootstrap, n_resample=n_resample)
-#             all_cor = np.zeros(n_bootstrap)
-#             for i_boot in range(n_bootstrap):
-#                 proc_res = bootstrap_results[:, i_boot]
-#                 all_cor[i_boot] = spearmanr(proc_res, meas_res).correlation
-#             sorted_cor = np.sort(all_cor)
-#             y_min.append(sorted_cor[2])
-#             y_median.append(sorted_cor[50])
-#             y_max.append(sorted_cor[-2])
-# 
-#         y_error = np.vstack((np.array(y_median)-np.array(y_min), np.array(y_max)-np.array(y_median)))
-#         plt.errorbar(all_n_resample, y_median, yerr=y_error, label=measure_name)
-#     plt.legend()
-#     plt.show()
-# #             print(measure_name, sorted_cor[2], sorted_cor[50], sorted_cor[-2])
-#         print(measure_name, all_cor)
 
 
 def plot_process_v_measure(process_results, measure_results):
@@ -207,7 +187,6 @@ def plot_pvm_dt(process_results, measure_results):
 
 
 def plt_pvm_alpha(process_results, measure_results, dt):
-    n_measure = len(measure_results)
     x_vals = np.array([np.mean(r) for r in process_results])
     t_start = dt + 1
     t_end = dt + 2

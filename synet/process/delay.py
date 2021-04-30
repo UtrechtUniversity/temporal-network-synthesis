@@ -173,6 +173,7 @@ def _simulate_delay(net, start, end, p_delay=0.03,
                     set_delay(agent_id, time_slot=new_time_slot)
         cur_t = (cur_t+1) % (max_delay+1)
         current_total_delay -= n_current_delayed
+
         # Measure the current total delay.
         total_delay[dst_event-start] = current_total_delay/n_agents/n_agents
     return total_delay

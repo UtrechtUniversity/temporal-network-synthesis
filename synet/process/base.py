@@ -2,6 +2,7 @@ from abc import ABC
 from multiprocessing import Queue, cpu_count, Process
 
 import numpy as np
+
 from synet.networks.base import BaseNetwork
 
 

@@ -11,7 +11,8 @@ def create_net_boot(n_network, n_bootstrap):
     return network_idx
 
 
-def create_process_bootstrap(process_results, n_bootstrap=100, network_idx=None):
+def create_process_bootstrap(process_results, n_bootstrap=100,
+                             network_idx=None):
     if isinstance(process_results, dict):
         n_network = len(process_results[list(process_results)[0]])
 
@@ -37,7 +38,8 @@ def create_process_bootstrap(process_results, n_bootstrap=100, network_idx=None)
         cur_net_idx = network_idx[i_bootstrap]
         cur_sample_idx = np.random.choice(
             n_sample, size=n_sample, replace=True)
-        res = np.mean(avg_process_results[cur_net_idx][:, cur_sample_idx], axis=1)
+        res = np.mean(avg_process_results[cur_net_idx][:, cur_sample_idx],
+                      axis=1)
         boot_process_results[i_bootstrap] = res
     return boot_process_results, network_idx
 
@@ -51,14 +53,16 @@ def create_xcor_boot_matrix(boot_proc_results, measure_results):
     meas_names = list(measure_results)
     cor_names = (list(boot_proc_results), list(avg_meas_results))
     n_boot = boot_proc_results[proc_names[0]][0].shape[0]
-    xcor_matrix = np.zeros((len(boot_proc_results), len(avg_meas_results), n_boot))
+    xcor_matrix = np.zeros((len(boot_proc_results), len(avg_meas_results),
+                            n_boot))
     for proc_name, proc_res in boot_proc_results.items():
         proc_data, net_idx = proc_res
         for meas_name, meas_res in avg_meas_results.items():
             correlations = []
             n_boot = proc_data.shape[0]
             for i_boot in range(n_boot):
-                cor = spearmanr(proc_data[i_boot], meas_res[net_idx[i_boot]]).correlation
+                cor = spearmanr(proc_data[i_boot],
+                                meas_res[net_idx[i_boot]]).correlation
                 correlations.append(cor)
             idx = proc_names.index(proc_name), meas_names.index(meas_name)
             xcor_matrix[idx] = correlations

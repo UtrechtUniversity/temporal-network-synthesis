@@ -4,9 +4,7 @@ from synet.process.base import BaseProcess
 
 
 class PredatorProcess(BaseProcess):
-    def __init__(self):
-        pass
-
+    "Predation like process."
     def _simulate(self, net, start=0, end=None, seed=None):
         np.random.seed(seed)
         if end is None:
@@ -18,6 +16,8 @@ def simulate_predator(net, start, end):
     n_agents = net.n_agents
     participants = net.participants
 
+    # Initialize arrays and observables, half of the animals are predators.
+    # Predators: 1, Prey: 0
     agent_types = np.zeros(n_agents, dtype=int)
     agent_types[:n_agents//2] = 1
     np.random.shuffle(agent_types)
@@ -32,11 +32,15 @@ def simulate_predator(net, start, end):
         n_predators = len(predator_idx)
         n_prey = len(prey_idx)
         new_predators = min(event_size, 2*n_predators, n_prey//2)
+        # Predators eat prey and multiply.
         if new_predators > n_predators:
-            new_predator_idx = np.random.choice(prey_idx, size=new_predators-n_predators, replace=False)
+            new_predator_idx = np.random.choice(
+                prey_idx, size=new_predators-n_predators, replace=False)
             agent_types[new_predator_idx] = 1
+        # Predators starve because of a lack of prey.
         elif new_predators < n_predators:
-            new_prey_idx = np.random.choice(predator_idx, size=n_predators-new_predators, replace=False)
+            new_prey_idx = np.random.choice(
+                predator_idx, size=n_predators-new_predators, replace=False)
             agent_types[new_prey_idx] = 0
 
         cur_predators += (new_predators-n_predators)

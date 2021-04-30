@@ -4,12 +4,20 @@ from synet.process.base import BaseProcess
 
 
 class MajorityProcess(BaseProcess):
+    "Majority vote like process."
     def __init__(self, n_color=3):
+        """Initialize majority process.
+
+        Arguments
+        ---------
+        n_color: int
+            Number of different views/colors that vie for domination.
+        """
         self.n_color = n_color
 
     def _simulate(self, net, start=0, end=None, seed=None):
         np.random.seed(seed)
-        results = simulate_majority(
+        results = _simulate_majority(
             net, start, end, n_color=self.n_color)
         return results
 
@@ -18,20 +26,23 @@ class MajorityProcess(BaseProcess):
 
 
 def entropy(counts, n_agents):
-    nz_counts = counts[counts>0]
+    "Find the entropy from the color counts and the number of agents."
+    nz_counts = counts[counts > 0]
     p = nz_counts/n_agents
     return np.sum(-p*np.log(p))
 
 
-def simulate_majority(net, start, end, n_color=3):
+def _simulate_majority(net, start, end, n_color=3):
     n_agents = net.n_agents
     participants = net.participants
 
+    # Each color starts with the same number of agents.
     current_colors = np.zeros(n_agents, dtype=int)
     for i_color in range(1, n_color):
         current_colors[i_color::n_color] = i_color
     np.random.shuffle(current_colors)
 
+    # Initialize arrays and observables.
     cur_col_counts = np.zeros(n_color, dtype=int)
     for i_color in range(n_color):
         cur_col_counts[i_color] = len(np.where(current_colors == i_color)[0])
@@ -42,6 +53,8 @@ def simulate_majority(net, start, end, n_color=3):
         cur_agents = participants[dst_event]
         colors = current_colors[cur_agents]
         col, counts = np.unique(colors, return_counts=True)
+
+        # Flip the agents, when a majority is reached.
         if np.max(counts) >= majority_count:
             max_col = np.argmax(counts)
             new_color = col[max_col]

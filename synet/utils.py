@@ -2,8 +2,6 @@ from collections import defaultdict
 
 import numpy as np
 
-from synet.analysis import entropy_dt, fixed_entropy_dt
-
 
 def get_measure(measure_name, **kwargs):
     from synet.config import measures
@@ -30,9 +28,4 @@ def apply_measures(networks, measures=None, max_dt=100, n_jobs=1):
 
 
 def apply_process(networks, process, dt=100, n_sim=16, n_jobs=1):
-    all_process_results = []
-#     for net in networks:
-#         res = process.simulate_dt(net, dt=dt, n_sim=n_sim, n_jobs=n_jobs)
-#         all_process_results.append(res)
     return process.simulate_dt(networks, dt, n_sim=n_sim, n_jobs=n_jobs)
-#     return all_process_results
