@@ -28,16 +28,17 @@ def plot_community(A, block_list=None):
     plt.show()
 
 
-def plot_entropy_game(*results, events):
+def plot_entropy_with_events(*results, events):
     assert len(results) > 0
 
     res_min = 1e7
     res_max = -1e7
     for res in results:
         plt.plot(res)
-        res_min = min(np.nanmin(res), res_min)
-        res_max = max(np.nanmax(res), res_max)
+        res_min = min(np.nanmin(res[res > 0]), res_min)
+        res_max = max(np.nanmax(res[res > 0]), res_max)
 
+    plt.ylim(res_min, res_max)
     plt.vlines(events, res_min, res_max, color='red', linestyle="--")
     plt.show()
 
