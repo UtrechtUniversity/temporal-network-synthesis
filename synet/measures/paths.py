@@ -9,8 +9,8 @@ class PathEntropy(BasePaintEntropy):
     """Counting path paint game."""
     name = "path"
 
-    def measure_entropy(self, net, start, end):
-        return path_entropy(net, start, end)
+    def measure_entropy(self, net, start, end, **kwargs):
+        return path_entropy(net, start, end, **kwargs)
 
 
 @njit

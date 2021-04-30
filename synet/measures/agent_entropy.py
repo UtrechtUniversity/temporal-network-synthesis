@@ -13,8 +13,8 @@ class AgentEntropy(BaseMeasure):
     """
     name = "agent"
 
-    def measure_entropy(self, net, start, end):
-        return agent_entropy(net, start, end)
+    def measure_entropy(self, net, start, end, **kwargs):
+        return agent_entropy(net, start, end, **kwargs)
 
 
 def agent_entropy(net, start=1, end=None, numba=True):
@@ -22,7 +22,7 @@ def agent_entropy(net, start=1, end=None, numba=True):
         end = net.n_events
 
     agent_count = np.zeros(net.n_agents, dtype=int)
-    entropy = np.zeros(end-start)
+    entropy = np.zeros(end-start+1)
 
     if numba:
         return _numba_agent_entropy(net.participants, agent_count, entropy,
@@ -37,7 +37,7 @@ def _numba_agent_entropy(participants, agent_count, entropy, start, end):
         agent_count[participants[i_event]] += 1
         n_visit = agent_count[(agent_count > 0)]
         p = n_visit/np.sum(n_visit)
-        entropy[i_event-start] = -np.sum(p*np.log(p))
+        entropy[i_event-start+1] = -np.sum(p*np.log(p))
     return entropy
 
 
@@ -47,5 +47,5 @@ def _python_agent_entropy(net, agent_count, entropy, start, end):
         agent_count[net.participants[i_event]] += 1
         p = agent_count[(agent_count > 0)]
         p = p/np.sum(p)
-        entropy[i_event-start] = -np.sum(p*np.log(p))
+        entropy[i_event-start+1] = -np.sum(p*np.log(p))
     return entropy

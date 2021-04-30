@@ -7,8 +7,8 @@ class MixingEntropy(BasePaintEntropy):
     """Mixing or paint-conserving entropy."""
     name = "mixing"
 
-    def measure_entropy(self, net, start, end):
-        return mixing_entropy(net, start, end)
+    def measure_entropy(self, net, start, end, **kwargs):
+        return mixing_entropy(net, start, end, **kwargs)
 
 
 def mixing_entropy(net, start=1, end=None, numba=True):

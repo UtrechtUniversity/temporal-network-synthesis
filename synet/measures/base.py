@@ -58,7 +58,7 @@ class BaseMeasure(ABC):
 
         return results
 
-    def entropy_t(self, networks, dt, n_jobs=1):
+    def entropy_t(self, networks, dt, n_jobs=1, **kwargs):
         """ Measure the entropy/measure as a function of time
 
         Arguments
@@ -75,13 +75,13 @@ class BaseMeasure(ABC):
         Results ordered by the input order of the network.
         """
         if isinstance(networks, BaseNetwork):
-            return self._entropy_t(networks, dt)
+            return self._entropy_t(networks, dt, **kwargs)
 
         res = []
         if n_jobs == 1:
             # Single process
             for net in networks:
-                res.append(self._entropy_t(net, dt))
+                res.append(self._entropy_t(net, dt, **kwargs))
         else:
             # Multiprocessing
             jobs = [
@@ -91,6 +91,7 @@ class BaseMeasure(ABC):
                     "entropy_kwargs": {
                         "net": networks[i_net],
                         "dt": dt,
+                        **kwargs,
                     },
                     "net_id": i_net,
                 }
@@ -149,7 +150,7 @@ class BaseMeasure(ABC):
             res = [all_res[sim_id][1] for sim_id in sim_ids]
         return res
 
-    def _entropy_t(self, net, dt):
+    def _entropy_t(self, net, dt, **kwargs):
         """Internal method for computing the entropy vs time."""
         last_events = np.full(net.n_agents, -1, dtype=int)
         entropy_avg = np.zeros(net.n_events)
@@ -159,15 +160,15 @@ class BaseMeasure(ABC):
             agents = net.participants[t_start]
 
             t_end = min(t_start + dt, n_events)
-            entropy = self.measure_entropy(net, t_start, t_end)
+            entropy = self.measure_entropy(net, t_start, t_end, **kwargs)
             all_prev_dt = t_start - last_events[agents]
             for prev_dt in all_prev_dt:
-                inter_start = max(-prev_dt, -dt)
+                inter_start = max(-prev_dt, -dt, -t_start-1)
                 inter_end = min(0, t_end-t_start-dt)
-                src_start = inter_start + dt
-                src_end = inter_end + dt
-                dst_start = inter_start + dt//2 + t_start
-                dst_end = inter_end + dt//2 + t_start
+                src_start = inter_start + dt + 1
+                src_end = inter_end + dt + 1
+                dst_start = inter_start + dt//2 + t_start + 1
+                dst_end = inter_end + dt//2 + t_start + 1
                 entropy_avg[dst_start:dst_end] += entropy[src_start:src_end]
                 entropy_counts[dst_start:dst_end] += 1
             last_events[agents] = t_start

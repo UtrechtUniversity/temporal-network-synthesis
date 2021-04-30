@@ -7,8 +7,8 @@ class PaintEntropy(BasePaintEntropy):
     """Boolean version of the paint game."""
     name = "paint"
 
-    def measure_entropy(self, net, start, end):
-        return paint_entropy(net, start, end)
+    def measure_entropy(self, net, start, end, **kwargs):
+        return paint_entropy(net, start, end, **kwargs)
 
 
 def paint_entropy(net, start=0, end=None, numba=True):
@@ -67,5 +67,5 @@ def _python_paint_entropy(A, entropy, visited, n_exit, start, end):
         if visited[dst_event-start]:
             n_current_agents += n_exit[dst_event]
 
-        entropy[dst_event-start] = np.log(n_current_agents)
+        entropy[dst_event-start+1] = np.log(n_current_agents)
     return entropy
