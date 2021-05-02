@@ -176,32 +176,7 @@ class BaseMeasure(ABC):
 
     def _entropy_dt(self, net, max_dt):
         """Internal method for computing entropy vs dt.
-
-        This method is overwritten for the paint games.
         """
-        n_events = net.n_events
-        eq_start = n_events//10
-        eq_end = 9*n_events//10
-
-        entropy_avg = np.zeros(max_dt)
-        for t_start in range(eq_start, eq_end-max_dt):
-            t_end = t_start + max_dt
-            entropy = self.measure_entropy(net, t_start, t_end)
-            entropy_avg += entropy
-        return entropy_avg/(eq_end-eq_start-max_dt)
-
-    @abstractmethod
-    def measure_entropy(self, net, start, end):
-        """Main method that needs to be implemented by sub classes."""
-        raise NotImplementedError
-
-    def todict(self):
-        return {}
-
-
-class BasePaintEntropy(BaseMeasure):
-    """Base class for paint game measures."""
-    def _entropy_dt(self, net, max_dt):
         n_events = net.n_events
 
         last_events = np.full(net.n_agents, -1, dtype=int)
@@ -229,6 +204,14 @@ class BasePaintEntropy(BaseMeasure):
 
         norm = (n_events-np.arange(max_dt+1))
         return entropy_avg/norm
+
+    @abstractmethod
+    def measure_entropy(self, net, start, end):
+        """Main method that needs to be implemented by sub classes."""
+        raise NotImplementedError
+
+    def todict(self):
+        return {}
 
 
 def _simulate_worker_dt(job_queue, output_queue, pid):

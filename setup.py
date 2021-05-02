@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='synet',
-    version='0.0.1',
+    version='0.1.0',
     author='Raoul Schram',
     description='synet',
     long_description='more synet',

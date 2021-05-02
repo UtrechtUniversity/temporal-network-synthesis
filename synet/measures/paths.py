@@ -2,10 +2,10 @@ import numpy as np
 from numba.core.decorators import njit
 
 from synet.measures.utils import add_value, sub_value
-from synet.measures.base import BasePaintEntropy
+from synet.measures.base import BaseMeasure
 
 
-class PathEntropy(BasePaintEntropy):
+class PathEntropy(BaseMeasure):
     """Counting path paint game."""
     name = "path"
 
@@ -23,11 +23,10 @@ def entropy_compute(log_sum_n_log_n, log_sum_n):
         return -np.exp(log_sum_n_log_n - log_sum_n) + log_sum_n
 
 
-def path_entropy(net, start=1, end=None, numba=True):
+def path_entropy(net, start, end, numba=True):
     A = net.A
     n_events = A.shape[0]
-    if end is None:
-        end = n_events
+
     log_n_path = np.full(n_events, -1, dtype=float)
     n_exit = np.array(np.sum(A, axis=1)).flatten()
     entropy = np.full(end-start+1, -1, dtype=float)
@@ -44,9 +43,12 @@ def _numba_path_entropy(A_indptr, A_data, A_indices, entropy, log_n_path,
     "Numba computation of the path paint game (fast)."
     log_sum_n_log_n = -1
     log_sum_n = np.log(n_exit[start])
-    log_n_path[start] = 0
 
     entropy[0] = 0
+    if start == end:
+        return entropy
+
+    log_n_path[start] = 0
     entropy[1] = entropy_compute(log_sum_n_log_n, log_sum_n)
     for dst_event in range(start+1, end):
         for src_pointer in range(A_indptr[dst_event], A_indptr[dst_event+1]):
@@ -81,9 +83,11 @@ def python_path_entropy(A, entropy, log_n_path, n_exit, start, end):
     "Python path computation of the path paint game (slow)."
     log_sum_n_log_n = -1
     log_sum_n = np.log(n_exit[start])
-    log_n_path[start] = 0
 
     entropy[0] = 0
+    if start == end:
+        return entropy
+    log_n_path[start] = 0
     entropy[1] = entropy_compute(log_sum_n_log_n, log_sum_n)
     for dst_event in range(start+1, end):
         for src_pointer in range(A.indptr[dst_event], A.indptr[dst_event+1]):

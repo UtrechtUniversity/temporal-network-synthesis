@@ -17,10 +17,7 @@ class AgentEntropy(BaseMeasure):
         return agent_entropy(net, start, end, **kwargs)
 
 
-def agent_entropy(net, start=1, end=None, numba=True):
-    if end is None:
-        end = net.n_events
-
+def agent_entropy(net, start, end, numba=True):
     agent_count = np.zeros(net.n_agents, dtype=int)
     entropy = np.zeros(end-start+1)
 

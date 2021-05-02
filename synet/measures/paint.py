@@ -1,9 +1,9 @@
 from numba.core.decorators import njit
 import numpy as np
-from synet.measures.base import BasePaintEntropy
+from synet.measures.base import BaseMeasure
 
 
-class PaintEntropy(BasePaintEntropy):
+class PaintEntropy(BaseMeasure):
     """Boolean version of the paint game."""
     name = "paint"
 
@@ -11,10 +11,8 @@ class PaintEntropy(BasePaintEntropy):
         return paint_entropy(net, start, end, **kwargs)
 
 
-def paint_entropy(net, start=0, end=None, numba=True):
+def paint_entropy(net, start, end, numba=True):
     A = net.A
-    if end is None:
-        end = net.n_events
 
     entropy = np.full(end-start+1, -1, dtype=float)
     n_exit = np.array(A.sum(axis=1)).flatten()
@@ -32,6 +30,8 @@ def _numba_paint_entropy(A_indptr, A_data, A_indices, entropy, visited, n_exit,
     "Numba version of boolean paint game (fast)."
     n_current_agents = n_exit[start]
     entropy[0] = 0
+    if start == end:
+        return entropy
     entropy[1] = np.log(n_current_agents)
     visited[0] = True
     for dst_event in range(start+1, end):
@@ -53,7 +53,7 @@ def _python_paint_entropy(A, entropy, visited, n_exit, start, end):
     n_current_agents = n_exit[start]
     entropy[0] = 0
     if start == end:
-        return
+        return entropy
     entropy[1] = np.log(n_current_agents)
     visited[0] = True
     for dst_event in range(start+1, end):

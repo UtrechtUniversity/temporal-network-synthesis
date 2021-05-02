@@ -1,9 +1,9 @@
 from numba import njit
 import numpy as np
-from synet.measures.base import BasePaintEntropy
+from synet.measures.base import BaseMeasure
 
 
-class MixingEntropy(BasePaintEntropy):
+class MixingEntropy(BaseMeasure):
     """Mixing or paint-conserving entropy."""
     name = "mixing"
 
@@ -11,10 +11,8 @@ class MixingEntropy(BasePaintEntropy):
         return mixing_entropy(net, start, end, **kwargs)
 
 
-def mixing_entropy(net, start=1, end=None, numba=True):
+def mixing_entropy(net, start, end, numba=True):
     A = net.A
-    if end is None:
-        end = net.n_events
 
     entropy = np.full(end-start+1, -1, dtype=float)
     n_exit = np.array(A.sum(axis=1)).flatten()
@@ -34,8 +32,10 @@ def _numba_mixing_entropy(
         A_indptr, A_data, A_indices, entropy, paint_fraction, current_p_log_p,
         n_exit, start, end):
     """Numba computation (much faster)."""
-    paint_fraction[0] = 1
     entropy[0] = 0
+    if start == end:
+        return entropy
+    paint_fraction[0] = 1
     entropy[1] = current_p_log_p
 
     for dst_event in range(start+1, end):
@@ -59,8 +59,10 @@ def _numba_mixing_entropy(
 def _python_mixing_entropy(
         A, entropy, paint_fraction, current_p_log_p, n_exit, start, end):
     "Python variant."
-    paint_fraction[0] = 1
     entropy[0] = 0
+    if start == end:
+        return entropy
+    paint_fraction[0] = 1
     entropy[1] = current_p_log_p
 
     for dst_event in range(start+1, end):

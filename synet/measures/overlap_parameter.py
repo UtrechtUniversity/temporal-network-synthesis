@@ -17,10 +17,7 @@ class OverlapParameter(BaseMeasure):
         return overlap_parameter(net, start, end, **kwargs)
 
 
-def overlap_parameter(net, start=1, end=None, numba=True):
-    if end is None:
-        end = net.n_events
-
+def overlap_parameter(net, start, end, numba=True):
     n_agents = net.n_agents
     last_events = np.full(n_agents, -1, dtype=int)
     overlap = np.zeros(end-start+1, dtype=float)
