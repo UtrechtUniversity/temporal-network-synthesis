@@ -68,8 +68,8 @@ class BaseProcess(ABC):
 
         return results
 
-    def simulate(self, net, start=1, end=None, n_sim=1, n_jobs=1, seed=None):
-        """Simulate the process over a portion of the network(s).
+    def simulate(self, net, start=0, end=None, n_sim=1, n_jobs=1, seed=None):
+        """Simulate the process over a portion of the network.
 
         Arguments
         ---------
@@ -116,7 +116,7 @@ class BaseProcess(ABC):
                 }
                 for seed in all_seeds
             ]
-            all_res = self.run_jobs(net, jobs, n_jobs=n_jobs)
+            all_res = self.run_jobs(jobs, _simulate_worker, net, n_jobs=n_jobs)
             for t in all_res:
                 res += t[1]
         return res/n_sim
@@ -166,7 +166,8 @@ class BaseProcess(ABC):
             }
             for net_id in range(n_network)
         ]
-        results = self.run_jobs(jobs, net=networks, n_sim=n_sim, n_jobs=n_jobs)
+        results = self.run_jobs(jobs, _simulate_network_worker, net=networks,
+                                n_jobs=n_jobs)
         sorted_res = sorted(results, key=lambda x: x[0]["net_id"])
         return [r[1] for r in sorted_res]
 
@@ -195,15 +196,16 @@ class BaseProcess(ABC):
                     "sim_kwargs": {
                         "start": starts[i_sim],
                         "end": starts[i_sim] + dt,
-                        "seed": seed,
+                        "seed": all_seeds[i_sim],
                     },
                     "sim_id": i_sim,
                 }
                 for i_sim in range(n_sim)
             ]
-            all_res = self.run_jobs(net, jobs, n_jobs=n_jobs)
-            for i_sim, t in enumerate(all_res):
-                res[i_sim][:] = t[1]
+            all_res = self.run_jobs(jobs, _simulate_worker, net, n_jobs=n_jobs)
+            for cur_res in all_res:
+                sim_id = cur_res[0]["sim_id"]
+                res[sim_id][:] = cur_res[1]
         return res
 
     def _simulate(self, net, start=0, end=None, seed=None):
@@ -226,7 +228,7 @@ def _simulate_worker(job_queue, output_queue, net):
         sim_kwargs = job["sim_kwargs"]
 
         process = cls(**init_kwargs)
-        results = process.simulate(net, **sim_kwargs)
+        results = process._simulate(net, **sim_kwargs)
         output_queue.put((job, results))
 
 

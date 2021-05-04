@@ -8,6 +8,8 @@ from synet.networks.user import UserNetwork
 from synet.measures.paint import PaintEntropy
 from synet.measures.paths import PathEntropy
 from synet.measures.mixing import MixingEntropy
+from synet.measures.overlap_parameter import OverlapParameter
+from synet.measures.agent_entropy import AgentEntropy
 
 n_events = 50
 
@@ -142,6 +144,43 @@ def test_mixing_entropy():
          2*comp_entropy((3, 1/9), (3, 2/9)) + log(3)),
         0
     ]
+
+    assert np.allclose(entropy_t_dt1, 3*log(3))
+    assert np.allclose(entropy_t_dt2, manual_dt2)
+    assert np.allclose(entropy_t_dt3, manual_dt3)
+    assert np.allclose(entropy_t_dt4, manual_dt4)
+
+
+def _test_overlap():
+    net = create_user_net()
+    measure = OverlapParameter()
+    entropy_t_dt1 = measure.entropy_t(net, 1, numba=False)
+    entropy_t_dt2 = measure.entropy_t(net, 2, numba=False)
+    entropy_t_dt3 = measure.entropy_t(net, 3, numba=False)
+    entropy_t_dt4 = measure.entropy_t(net, 4, numba=False)
+
+    manual_dt2 = [0, 5, 5, 6]
+    manual_dt3 = [0, 6, 4.5, 0]
+    manual_dt4 = [0, 0, 4, 0]
+
+    assert np.allclose(entropy_t_dt1, 3)
+    assert np.allclose(entropy_t_dt2, manual_dt2)
+    assert np.allclose(entropy_t_dt3, manual_dt3)
+    assert np.allclose(entropy_t_dt4, manual_dt4)
+
+
+def _test_agent_entropy():
+    net = create_user_net()
+    measure = AgentEntropy()
+    entropy_t_dt1 = measure.entropy_t(net, 1, numba=False)
+    entropy_t_dt2 = measure.entropy_t(net, 2, numba=False)
+    entropy_t_dt3 = measure.entropy_t(net, 3, numba=False)
+    entropy_t_dt4 = measure.entropy_t(net, 4, numba=False)
+
+    manual_dt2 = [0, 3*comp_entropy((1, 2/6), (4, 1/6))+2*log(3),
+                  3*comp_entropy((1, 2/6), (4, 1/6))+2*log(3), 3*log(6)+3*log(3)]
+    manual_dt3 = [0, 3*log(6)+2*log(5)+log(3), 5*log(6)+log(3), 0]
+    manual_dt4 = [0, 0, 4, 0]
 
     assert np.allclose(entropy_t_dt1, 3*log(3))
     assert np.allclose(entropy_t_dt2, manual_dt2)

@@ -28,9 +28,9 @@ class DiseaseProcess(BaseProcess):
 
     def _simulate(self, net, start=0, end=None, seed=None):
         "Simulate the disease process."
-        np.random.seed(seed)
+#         np.random.seed(seed)
         results = _simulate_disease(
-            net.participants, net.n_agents, start, end,
+            net.participants, net.n_agents, start, end, seed,
             disease_time=self.disease_time, disease_dt=self.disease_dt,
             p_infected=self.p_infected)
         return results
@@ -44,9 +44,10 @@ class DiseaseProcess(BaseProcess):
 
 
 @njit
-def _simulate_disease(participants, n_agents, start, end,
+def _simulate_disease(participants, n_agents, start, end, seed,
                       disease_time=2, disease_dt=1, p_infected=0.2):
     "Simulate the disease process."
+    np.random.seed(seed)
     n_zeros = n_agents//2
     n_ones = n_agents - n_zeros
     cur_agents_state = np.zeros(n_agents, dtype=nb.int32)
@@ -95,6 +96,7 @@ def _simulate_disease(participants, n_agents, start, end,
         if cur_infected == 0:
             break
         cur_t = (cur_t+1) % (max_disease_steps+1)
+#     print(n_infected)
     return n_infected
 
 
