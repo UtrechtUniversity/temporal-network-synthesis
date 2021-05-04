@@ -28,44 +28,44 @@ def paint_entropy(net, start, end, numba=True):
 def _numba_paint_entropy(A_indptr, A_data, A_indices, entropy, visited, n_exit,
                          start, end):
     "Numba version of boolean paint game (fast)."
-    n_current_agents = n_exit[start]
+    n_current_agents = n_exit[start+1]
     entropy[0] = 0
     if start == end:
         return entropy
     entropy[1] = np.log(n_current_agents)
     visited[0] = True
-    for dst_event in range(start+1, end):
+    for dst_event in range(start+2, end+1):
         for src_pointer in range(A_indptr[dst_event], A_indptr[dst_event+1]):
             src_event = A_indices[src_pointer]
             n_agent = A_data[src_pointer]
             n_exit[src_event] -= n_agent
-            if (src_event-start) >= 0 and visited[src_event-start]:
+            if src_event >= start+1 >= 0 and visited[src_event-start-1]:
                 n_current_agents -= n_agent
-                visited[dst_event-start] = True
-        if visited[dst_event-start]:
+                visited[dst_event-start-1] = True
+        if visited[dst_event-start-1]:
             n_current_agents += n_exit[dst_event]
-        entropy[dst_event-start+1] = np.log(n_current_agents)
+        entropy[dst_event-start] = np.log(n_current_agents)
     return entropy
 
 
 def _python_paint_entropy(A, entropy, visited, n_exit, start, end):
     "Python version of boolean paint game (slow)."
-    n_current_agents = n_exit[start]
+    n_current_agents = n_exit[start+1]
     entropy[0] = 0
     if start == end:
         return entropy
     entropy[1] = np.log(n_current_agents)
     visited[0] = True
-    for dst_event in range(start+1, end):
+    for dst_event in range(start+2, end+1):
         for src_pointer in range(A.indptr[dst_event], A.indptr[dst_event+1]):
             src_event = A.indices[src_pointer]
             n_agent = A.data[src_pointer]
             n_exit[src_event] -= n_agent
-            if (src_event-start) >= 0 and visited[src_event-start]:
+            if src_event >= start+1 and visited[src_event-start-1]:
                 n_current_agents -= n_agent
-                visited[dst_event-start] = True
-        if visited[dst_event-start]:
+                visited[dst_event-start-1] = True
+        if visited[dst_event-start-1]:
             n_current_agents += n_exit[dst_event]
 
-        entropy[dst_event-start+1] = np.log(n_current_agents)
+        entropy[dst_event-start] = np.log(n_current_agents)
     return entropy

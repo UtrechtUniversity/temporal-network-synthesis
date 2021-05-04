@@ -42,15 +42,15 @@ def _numba_path_entropy(A_indptr, A_data, A_indices, entropy, log_n_path,
                         n_exit, start, end):
     "Numba computation of the path paint game (fast)."
     log_sum_n_log_n = -1
-    log_sum_n = np.log(n_exit[start])
+    log_sum_n = np.log(n_exit[start+1])
 
     entropy[0] = 0
     if start == end:
         return entropy
 
-    log_n_path[start] = 0
+    log_n_path[start+1] = 0
     entropy[1] = entropy_compute(log_sum_n_log_n, log_sum_n)
-    for dst_event in range(start+1, end):
+    for dst_event in range(start+2, end+1):
         for src_pointer in range(A_indptr[dst_event], A_indptr[dst_event+1]):
             src_event = A_indices[src_pointer]
             n_agent = A_data[src_pointer]
@@ -74,22 +74,22 @@ def _numba_path_entropy(A_indptr, A_data, A_indices, entropy, log_n_path,
                 log_sum_n_log_n = add_value(
                     log_sum_n_log_n, np.log(n_exit[dst_event])
                     + log_n_path[dst_event] + np.log(log_n_path[dst_event]))
-        entropy[dst_event-start+1] = entropy_compute(log_sum_n_log_n,
-                                                     log_sum_n)
+        entropy[dst_event-start] = entropy_compute(log_sum_n_log_n,
+                                                   log_sum_n)
     return entropy
 
 
 def python_path_entropy(A, entropy, log_n_path, n_exit, start, end):
     "Python path computation of the path paint game (slow)."
     log_sum_n_log_n = -1
-    log_sum_n = np.log(n_exit[start])
+    log_sum_n = np.log(n_exit[start+1])
 
     entropy[0] = 0
     if start == end:
         return entropy
-    log_n_path[start] = 0
+    log_n_path[start+1] = 0
     entropy[1] = entropy_compute(log_sum_n_log_n, log_sum_n)
-    for dst_event in range(start+1, end):
+    for dst_event in range(start+2, end+1):
         for src_pointer in range(A.indptr[dst_event], A.indptr[dst_event+1]):
             src_event = A.indices[src_pointer]
             n_agent = A.data[src_pointer]
@@ -114,6 +114,8 @@ def python_path_entropy(A, entropy, log_n_path, n_exit, start, end):
                     log_sum_n_log_n,
                     np.log(n_exit[dst_event]) + log_n_path[dst_event]
                     + np.log(log_n_path[dst_event]))
-        entropy[dst_event-start+1] = entropy_compute(log_sum_n_log_n,
-                                                     log_sum_n)
+        entropy[dst_event-start] = entropy_compute(log_sum_n_log_n,
+                                                   log_sum_n)
+    x = np.exp(log_n_path)
+    x[log_n_path == -1] = 0
     return entropy

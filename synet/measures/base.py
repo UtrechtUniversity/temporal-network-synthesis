@@ -196,13 +196,13 @@ class BaseMeasure(ABC):
                 new_counts[0] = 0
                 new_counts = np.cumsum(new_counts)
                 if prev_dt < max_dt:
-                    new_sum[prev_dt-max_dt:] -= new_sum[:max_dt-prev_dt]
+                    new_sum[prev_dt:] -= new_sum[:max_dt-prev_dt+1]
                     new_counts[prev_dt-max_dt:] -= new_counts[:max_dt-prev_dt]
                 entropy_avg += new_sum
                 counts += new_counts
             last_events[agents] = t_start
 
-        norm = (n_events-np.arange(max_dt+1))
+        norm = (n_events-np.arange(-1, max_dt))
         return entropy_avg/norm
 
     @abstractmethod

@@ -1,10 +1,13 @@
+from unittest.mock import patch
+
 import numpy as np
+from scipy.sparse.csc import csc_matrix
 
 from synet.networks.heterogeneous import HeterogeneousNetwork
 from synet.networks.homogeneous import HomogeneousNetwork
-from synet.networks.random import random_network, random_two_split_network
-from unittest.mock import patch
-from scipy.sparse.csc import csc_matrix
+from synet.networks.random import random_network
+from synet.networks.random import random_two_split_network
+from synet.networks.user import UserNetwork
 
 n_agents = 50
 n_events = 150
@@ -63,6 +66,15 @@ def test_homo_network(_):
     check_network(net)
     net.plot()
     net.plot_matrix()
+
+
+def test_user_network():
+    participants = np.zeros((n_events, event_size), dtype=int)
+    for i_event in range(n_events):
+        participants[i_event] = np.random.choice(
+            n_agents, size=event_size, replace=False)
+    net = UserNetwork.from_participants(participants, n_agents)
+    check_network(net)
 
 
 def test_random_network():
